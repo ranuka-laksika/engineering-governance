@@ -1,4 +1,4 @@
-name: Dependency Registry Gatekeeper
+name: Dependency Registry PR Validator
 
 on:
   pull_request:
@@ -65,23 +65,18 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Validate Java Registry
-        if: needs.detect-registry-changes.outputs.java == 'true' || needs.detect-registry-changes.outputs.schema == 'true'
-        uses: python-jsonschema/check-jsonschema@0.37.0
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          file: dependency-registry/java.yaml
-          schema: dependency-registry/schema.yaml
+          python-version: '3.12'
 
-      - name: Validate JavaScript Registry
-        if: needs.detect-registry-changes.outputs.javascript == 'true' || needs.detect-registry-changes.outputs.schema == 'true'
-        uses: python-jsonschema/check-jsonschema@0.37.0
-        with:
-          file: dependency-registry/javascript.yaml
-          schema: dependency-registry/schema.yaml
+      - name: Install JSON Schema Validator
+        run: pip install check-jsonschema==0.37.0
 
       - name: Validate Go Registry
         if: needs.detect-registry-changes.outputs.go == 'true' || needs.detect-registry-changes.outputs.schema == 'true'
-        uses: python-jsonschema/check-jsonschema@0.37.0
-        with:
-          file: dependency-registry/go.yaml
-          schema: dependency-registry/schema.yaml
+        run: check-jsonschema --schemafile dependency-registry/schema.yaml dependency-registry/go.yaml
+
+      - name: Validate Java Registry
+        if: needs.detect-registry-changes.outputs.java == 'true' || needs.detect-registry-changes.outputs.schema == 'true'
+        run: check-jsonschema --schemafile dependency-registry/schema.yaml dependency-registry/java.yaml

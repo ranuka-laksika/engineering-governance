@@ -1,7 +1,0 @@
-language: javascript
-dependencies:
-  # - package: axios
-  #   versions:
-  #     - version: "1.7.2"
-  #       allowed_scopes:
-  #         - apim-portal
