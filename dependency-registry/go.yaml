@@ -276,3 +276,14 @@ dependencies:
       - version: ">=v1.39.1"
         allowed_scopes:
           - "*"
+  - module: golang.org/x/text
+    versions:
+      - version: ">=v0.31.0"
+        allowed_scopes:
+          - "*"
+            
+  - module: github.com/gin-gonic/gin
+    versions:
+      - version: ">=v1.7.0 <v1.9.1"
+        allowed_scopes:
+          - "*"
