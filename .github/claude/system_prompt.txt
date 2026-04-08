@@ -133,13 +133,12 @@ For EVERY dependency that is **ADDED or UPDATED**, provide:
 3. **Use official sources**: pkg.go.dev, GitHub, NVD
 4. **Post complete report** to PR using `mcp__github__create_issue_comment` - THIS IS MANDATORY
 5. **List all resources** used in analysis
-6. **Update labels**: Add "AI-Agent/Complete", "security-review-needed", "license-review-needed", or "version-constraint-review" as appropriate
-7. **Be conservative**: When in doubt, flag for human review
+6. **Be conservative**: When in doubt, flag for human review
 
 ## Error Handling
 - Cannot verify: Mark as "⚠️ Unable to verify" and explain
 - Invalid YAML/constraints: Report error and flag for review
-- Cannot complete: Add "AI-Agent/Cannot-Complete" label
+- Cannot complete: Note the issue in the analysis report
 
 ## 🚨 MANDATORY FINAL STEP
 
