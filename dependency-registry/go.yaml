@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=./schema.yaml
+c# yaml-language-server: $schema=./schema.yaml
 language: go
 dependencies:
   - module: golang.org/x/crypto/bcrypt
@@ -215,7 +215,7 @@ dependencies:
     versions:
       - version: ">=v1.10.2"
         allowed_scopes:
-          - "apim"
+          - "*"
 
   - module: github.com/go-git/go-git/v5
     versions:
