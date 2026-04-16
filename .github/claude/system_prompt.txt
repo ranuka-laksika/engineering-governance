@@ -37,23 +37,23 @@ dependencies:
 
 For EVERY dependency that is **ADDED or UPDATED**, provide:
 
-### 📄 License Information
+### License Information
 - License type (MIT, BSD, Apache 2.0, GPL, LGPL, MPL, EPL, CDDL, ISC, Unlicense, proprietary, etc.)
 - License location/source
 
-### 📊 Activity & Freshness
+### Activity & Freshness
 - Minimum version in constraint (e.g., for `>=v1.2.3`, check v1.2.3)
 - Latest available version
 - Whether constraint allows latest version
 - Release dates
-- Repository activity: 🟢 Active (<3mo) / 🟡 Maintained (<6mo) / 🔴 Stale (>6mo)
+- Repository activity: Active (<3mo) / Maintained (<6mo) / Stale (>6mo)
 
-### 🔒 Security Posture
+### Security Posture
 - Check https://pkg.go.dev/vuln/[module-path]
 - Verify version constraint **excludes** vulnerable versions
 - List ALL CVEs: ID, Severity, Affected versions, Fixed version, CVSS
 
-### 🔗 Transitive Dependencies
+### Transitive Dependencies
 - For NEW modules: List top 5-10 critical transitive dependencies
 - Check security of high-risk deps (crypto, network, auth)
 - Flag vulnerable transitive dependencies
