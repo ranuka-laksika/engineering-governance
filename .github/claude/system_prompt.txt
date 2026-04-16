@@ -53,6 +53,7 @@ dependencies:
 2. **Fetch PR & Files**: Get PR details and `dependency-registry/go.yaml` from base and head branches
 3. **Compare YAML**: Identify NEW, UPDATED, or REMOVED modules
 4. **Analyze Each Changed Module**:
+   - **Show the exact entry** added/updated in the PR (module, version constraint, allowed_scopes)
    - Check pkg.go.dev for package info
    - Check pkg.go.dev/vuln for vulnerabilities
    - Check GitHub repository and license
@@ -110,14 +111,16 @@ For EVERY dependency that is **ADDED or UPDATED**, provide:
 
 **Total Registry Entries Changed**: [number]
 **Added**: [count] | **Updated**: [count] | **Removed**: [count]
-**Security Status**: [X] dependency/dependencies have active security issues / All dependencies are secure with no active vulnerabilities
+**Security Status**: ⚠️ [X] dependency/dependencies have active security issues / All dependencies are secure with no active vulnerabilities
 **Licenses Found**: BSD-3-Clause (Apache 2.0 compatible), MIT (Apache 2.0 compatible) / GPL-3.0 (⚠️ Not Apache 2.0 compatible), LGPL (⚠️ Not Apache 2.0 compatible)
 
 **IMPORTANT**:
 - A dependency is considered to have "active security issues" if:
   - The dependency itself has CVEs, OR
   - Any of its transitive dependencies have CVEs
-- Count only the dependencies with issues for the Security Status (e.g., if 2 dependencies added and only 1 has CVEs or vulnerable transitive deps, show "1 dependency has active security issues")
+- Count only the dependencies with issues for the Security Status
+- **Add ⚠️ symbol if there are ANY security issues**: "⚠️ 1 dependency has active security issues" or "⚠️ 2 dependencies have active security issues"
+- **No warning symbol if all secure**: "All dependencies are secure with no active vulnerabilities"
 - For each license, check Apache 2.0 compatibility and indicate the status:
   - **Apache 2.0 compatible**: MIT, BSD-2-Clause, BSD-3-Clause, ISC, Apache-2.0, Unlicense
   - **⚠️ Not Apache 2.0 compatible**: GPL, LGPL, AGPL, proprietary licenses
@@ -130,7 +133,14 @@ For EVERY dependency that is **ADDED or UPDATED**, provide:
 
 ---
 
-### `github.com/example/package`: `v1.2.3` - **New**
+### `github.com/example/package`: `>=v1.2.3` - **New**
+
+**Added Entry:**
+```
+module: github.com/example/package
+version: ">=v1.2.3"
+allowed_scopes: ["*"]
+```
 
 - **License**: Apache 2.0 / MIT / BSD-3-Clause / ⚠️ Not found
 - **Version status**: Latest version (v1.2.3) / ⚠️ Outdated (Latest: v1.3.0, released 15 days ago)
@@ -175,7 +185,14 @@ Note: All links must be specific to the dependency being analyzed. Do not includ
 
 ---
 
-### `github.com/another/module`: `v2.0.0` - **Modified** (version constraint updated)
+### `github.com/another/module`: `>=v2.0.0` - **Modified** (version constraint updated)
+
+**Updated Entry:**
+```
+module: github.com/another/module
+version: ">=v2.0.0"
+allowed_scopes: ["*"]
+```
 
 - **License**: MIT
 - **Version status**: Latest version
