@@ -68,62 +68,95 @@ For EVERY dependency that is **ADDED or UPDATED**, provide:
 <!-- dependency-analysis-report -->
 # 🤖 Dependency Registry Analysis Report
 
-> **Analyzed by Claude AI** | PR #${PR_NUMBER} | Repository: ${REPOSITORY}
-
 ## 📋 Summary
-- **Total Registry Entries Changed**: [number]
-- **Added**: [count] | **Updated**: [count] | **Removed**: [count]
-- **Security Risk**: 🟢 Low / 🟡 Medium / 🔴 High
-- **License Compliance**: ✅ All Compatible / ⚠️ Needs Review / ❌ Incompatible
-- **Version Constraints**: ✅ Secure / ⚠️ Needs Review / ❌ Too Permissive
-- **Repository Activity**: 🟢 [X] Active / 🟡 [Y] Maintained / 🔴 [Z] Stale
-- **Version Freshness**: Average [X] days behind latest versions
-- **Recommendation**: ✅ APPROVE / ⚠️ REVIEW REQUIRED / ❌ REJECT
+
+**Total Registry Entries Changed**: [number]
+**Added**: [count] | **Updated**: [count] | **Removed**: [count]
+**Security Status**: [X] dependencies have active security issues
+**License**: Apache, MIT, (!)GPLv2 (⚠️ Needs compatibility review)
+
+<details>
+<summary><b>See detailed analysis for more information</b></summary>
 
 ---
 
-## 📦 Detailed Analysis
+### `github.com/example/package`: `v1.2.3` - **New**
 
-### `github.com/example/package` - [NEW] ✨
-**Version Constraint**: `>=v1.2.3`
+- **License**: Apache 2.0 / ⚠️ Not found
+- **Version status**: ✅ Latest version (v1.2.3) / ⚠️ Outdated (Latest: v1.3.0, released 15 days ago)
+- **Security**: ✅ No known CVEs / ⚠️ 4 known CVEs detected
 
-#### ✅ License: MIT - Apache 2.0 Compatible
+<details>
+<summary>CVE Details</summary>
 
-#### 📊 Activity & Freshness
-- Constraint: `>=v1.2.3` | Min: v1.2.3 (2025-01-10) | Latest: v1.3.0 (2025-02-15)
-- Repository: 🟢 Active (last commit: 2025-03-20) | ⭐ 15.4k
+#### CVE-2024-12345 - High Severity (CVSS 8.1)
+- **Affects**: v1.0.0 - v1.2.2
+- **Fixed in**: v1.2.3
+- **Description**: [Brief description]
 
-#### 🔒 Security
-- Vulnerabilities: ✅ None in allowed range
-- Version Constraint: ✅ Excludes known vulnerabilities
+#### CVE-2024-67890 - Medium Severity (CVSS 5.3)
+- **Affects**: v1.1.0 - v1.2.0
+- **Fixed in**: v1.2.1
+- **Description**: [Brief description]
 
-#### 🔗 Transitive Dependencies
-1. `golang.org/x/net v0.20.0` - ✅ Secure
-2. `golang.org/x/sys v0.16.0` - ✅ Secure
-[...top 5-10]
+[...additional CVEs]
+
+</details>
+
+- **Transitive Dependencies**:
+  - `golang.org/x/net:v0.20.0` - ⚠️ 2 active CVEs
+  - `golang.org/x/sys:v0.16.0` - ✅ No known CVEs
+  - `github.com/example/dep:v2.1.0` - ✅ No known CVEs
+
+<details>
+<summary>References</summary>
+
+- **Repository**: https://github.com/example/package
+- **Documentation**: https://pkg.go.dev/github.com/example/package
+- **License**: https://github.com/example/package/blob/main/LICENSE
+- **Vulnerabilities**: https://pkg.go.dev/vuln/github.com/example/package
+
+</details>
 
 ---
 
-[Repeat for each changed dependency]
+### `github.com/another/module`: `v2.0.0` - **Modified** (version constraint updated)
+
+- **License**: MIT
+- **Version status**: ✅ Latest version
+- **Security**: ✅ No known CVEs
+- **Transitive Dependencies**: [X] dependencies analyzed, all secure
+
+<details>
+<summary>References</summary>
+
+- **Repository**: https://github.com/another/module
+- **Documentation**: https://pkg.go.dev/github.com/another/module
+
+</details>
+
+---
+
+### `github.com/old/package` - **Removed**
+
+---
+
+</details>
+
+> **⚠️ Note**: If no information found for a package, it will be highlighted with "⚠️ Unable to verify" in the relevant section.
 
 ---
 
 ## 🎯 Final Recommendation
-[Detailed reasoning]
+[Detailed reasoning based on security, licensing, and maintenance status]
 
 ### Action Items
-- [ ] Specific actions needed
-
-## 📚 Resources Used
-**List ALL URLs and resources consulted:**
-- Package info: https://pkg.go.dev/[module]
-- Vulnerabilities: https://pkg.go.dev/vuln/[module]
-- Repository: https://github.com/[module]
-- License: [URL to LICENSE file]
-- [Any other resources]
+- [ ] Specific actions needed (e.g., update version constraints, review licenses)
+- [ ] Security issues to address
 
 ---
 *Analysis completed on [timestamp] | Powered by Claude AI*
+*Analyzed PR #${PR_NUMBER} | Repository: ${REPOSITORY}*
 ```
 
 ## Critical Rules
