@@ -37,12 +37,9 @@ dependencies:
 
 For EVERY dependency that is **ADDED or UPDATED**, provide:
 
-### ✅ License Compatibility
-- License type (MIT, BSD, Apache 2.0, etc.)
-- Apache 2.0 compatibility status
-- ✅ Compatible: MIT, BSD, Apache 2.0, ISC, Unlicense
-- ⚠️ Review: LGPL, MPL, EPL, CDDL
-- ❌ Incompatible: GPL, AGPL, proprietary
+### 📄 License Information
+- License type (MIT, BSD, Apache 2.0, GPL, LGPL, MPL, EPL, CDDL, ISC, Unlicense, proprietary, etc.)
+- License location/source
 
 ### 📊 Activity & Freshness
 - Minimum version in constraint (e.g., for `>=v1.2.3`, check v1.2.3)
@@ -55,7 +52,6 @@ For EVERY dependency that is **ADDED or UPDATED**, provide:
 - Check https://pkg.go.dev/vuln/[module-path]
 - Verify version constraint **excludes** vulnerable versions
 - List ALL CVEs: ID, Severity, Affected versions, Fixed version, CVSS
-- Recommendation: ✅ Safe / ⚠️ Review / ❌ Block
 
 ### 🔗 Transitive Dependencies
 - For NEW modules: List top 5-10 critical transitive dependencies
@@ -72,8 +68,8 @@ For EVERY dependency that is **ADDED or UPDATED**, provide:
 
 **Total Registry Entries Changed**: [number]
 **Added**: [count] | **Updated**: [count] | **Removed**: [count]
-**Security Status**: [X] dependencies have active security issues
-**License**: Apache, MIT, (!)GPLv2 (⚠️ Needs compatibility review)
+**Security Status**: [X] dependencies have active security issues / ✅ All dependencies are secure with no active vulnerabilities
+**Licenses Found**: Apache, MIT, GPLv2, BSD-3-Clause, etc.
 
 <details>
 <summary><b>See detailed analysis for more information</b></summary>
@@ -82,7 +78,7 @@ For EVERY dependency that is **ADDED or UPDATED**, provide:
 
 ### `github.com/example/package`: `v1.2.3` - **New**
 
-- **License**: Apache 2.0 / ⚠️ Not found
+- **License**: Apache 2.0 / MIT / BSD-3-Clause / ⚠️ Not found
 - **Version status**: ✅ Latest version (v1.2.3) / ⚠️ Outdated (Latest: v1.3.0, released 15 days ago)
 - **Security**: ✅ No known CVEs / ⚠️ 4 known CVEs detected
 
@@ -141,18 +137,9 @@ For EVERY dependency that is **ADDED or UPDATED**, provide:
 
 ---
 
-</details>
-
 > **⚠️ Note**: If no information found for a package, it will be highlighted with "⚠️ Unable to verify" in the relevant section.
 
----
-
-## 🎯 Final Recommendation
-[Detailed reasoning based on security, licensing, and maintenance status]
-
-### Action Items
-- [ ] Specific actions needed (e.g., update version constraints, review licenses)
-- [ ] Security issues to address
+</details>
 
 ---
 *Analysis completed on [timestamp] | Powered by Claude AI*
@@ -166,7 +153,7 @@ For EVERY dependency that is **ADDED or UPDATED**, provide:
 3. **Use official sources**: pkg.go.dev, GitHub, NVD
 4. **Post complete report** to PR using `mcp__github__create_issue_comment` - THIS IS MANDATORY
 5. **List all resources** used in analysis
-6. **Be conservative**: When in doubt, flag for human review
+6. **Provide factual information only**: Do not make recommendations or decisions - present the data for reviewer evaluation
 
 ## Error Handling
 - Cannot verify: Mark as "⚠️ Unable to verify" and explain
@@ -187,4 +174,4 @@ mcp__github__create_issue_comment(
 
 **Your task is INCOMPLETE until the comment is posted to PR #${PR_NUMBER}!**
 
-Remember: You are analyzing a REGISTRY (go.yaml), not project dependencies (go.mod). Focus on whether modules should be ALLOWED based on security, licensing, and maintenance. Only analyze ADDED/UPDATED modules.
+Remember: You are analyzing a REGISTRY (go.yaml), not project dependencies (go.mod). Provide factual analysis of security, licensing, and maintenance data for ADDED/UPDATED modules. The reviewer will make the final decision on whether modules should be allowed.
