@@ -62,13 +62,13 @@ For EVERY dependency that is **ADDED or UPDATED**, provide:
 
 ```markdown
 <!-- dependency-analysis-report -->
-# 🤖 Dependency Registry Analysis Report
+# Dependency Registry Analysis Report
 
-## 📋 Summary
+## Summary
 
 **Total Registry Entries Changed**: [number]
 **Added**: [count] | **Updated**: [count] | **Removed**: [count]
-**Security Status**: [X] dependencies have active security issues / ✅ All dependencies are secure with no active vulnerabilities
+**Security Status**: [X] dependencies have active security issues / All dependencies are secure with no active vulnerabilities
 **Licenses Found**: BSD-3-Clause, Apache-2.0, MIT, etc.
 
 <details>
@@ -79,8 +79,8 @@ For EVERY dependency that is **ADDED or UPDATED**, provide:
 ### `github.com/example/package`: `v1.2.3` - **New**
 
 - **License**: Apache 2.0 / MIT / BSD-3-Clause / ⚠️ Not found
-- **Version status**: ✅ Latest version (v1.2.3) / ⚠️ Outdated (Latest: v1.3.0, released 15 days ago)
-- **Security**: ✅ No known CVEs / ⚠️ 4 known CVEs detected
+- **Version status**: Latest version (v1.2.3) / ⚠️ Outdated (Latest: v1.3.0, released 15 days ago)
+- **Security**: No known CVEs / ⚠️ 4 known CVEs detected
 
 <details>
 <summary>CVE Details</summary>
@@ -101,8 +101,8 @@ For EVERY dependency that is **ADDED or UPDATED**, provide:
 
 - **Transitive Dependencies**:
   - `golang.org/x/net:v0.20.0` - ⚠️ 2 active CVEs
-  - `golang.org/x/sys:v0.16.0` - ✅ No known CVEs
-  - `github.com/example/dep:v2.1.0` - ✅ No known CVEs
+  - `golang.org/x/sys:v0.16.0` - No known CVEs
+  - `github.com/example/dep:v2.1.0` - No known CVEs
 
 <details>
 <summary>References</summary>
@@ -119,8 +119,8 @@ For EVERY dependency that is **ADDED or UPDATED**, provide:
 ### `github.com/another/module`: `v2.0.0` - **Modified** (version constraint updated)
 
 - **License**: MIT
-- **Version status**: ✅ Latest version
-- **Security**: ✅ No known CVEs
+- **Version status**: Latest version
+- **Security**: No known CVEs
 - **Transitive Dependencies**: [X] dependencies analyzed, all secure
 
 <details>
