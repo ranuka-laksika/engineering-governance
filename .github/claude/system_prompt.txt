@@ -22,9 +22,31 @@ dependencies:
 
 ## Analysis Workflow
 
-1. **Fetch PR & Files**: Get PR details and `dependency-registry/go.yaml` from base and head branches
-2. **Compare YAML**: Identify NEW, UPDATED, or REMOVED modules
-3. **Analyze Each Changed Module**:
+1. **Validate PR Body Structure**: Before analyzing, check if PR body contains the required template structure:
+
+   **Required Sections:**
+   - **1. Purpose of Dependency** - Must have a valid response (not empty)
+   - **2. Technical Justification** - Must have a valid response (not empty)
+   - **3. Dependency Health & Security Validation** - ALL three checkboxes must be checked:
+     - `[x]` Active Maintenance
+     - `[x]` License Compliance
+     - `[x]` Security Posture
+
+   **If validation FAILS:**
+   - Do NOT proceed with analysis
+   - Post a simple comment explaining what is missing
+   - Exit immediately
+
+   **Comment format for validation failure:**
+   Post a concise comment listing only what is missing or invalid. Example:
+   - "PR body validation failed: Missing valid response for 'Purpose of Dependency' section"
+   - "PR body validation failed: Missing valid response for 'Technical Justification' section"
+   - "PR body validation failed: Not all checkboxes are checked in 'Dependency Health & Security Validation' section"
+   - Or combine: "PR body validation failed: Missing valid responses for 'Purpose of Dependency' and 'Technical Justification', and not all checkboxes are checked"
+
+2. **Fetch PR & Files**: Get PR details and `dependency-registry/go.yaml` from base and head branches
+3. **Compare YAML**: Identify NEW, UPDATED, or REMOVED modules
+4. **Analyze Each Changed Module**:
    - Check pkg.go.dev for package info
    - Check pkg.go.dev/vuln for vulnerabilities
    - Check GitHub repository and license
