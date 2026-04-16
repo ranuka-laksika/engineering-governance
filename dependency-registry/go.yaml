@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=./schema.yaml
+c# yaml-language-server: $schema=./schema.yaml
 language: go
 dependencies:
   - module: golang.org/x/crypto/bcrypt
