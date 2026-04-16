@@ -22,27 +22,33 @@ dependencies:
 
 ## Analysis Workflow
 
-1. **Validate PR Body Structure**: Before analyzing, check if PR body contains the required template structure:
+1. **Validate PR Body Structure and Content**: Before analyzing, perform complete validation:
 
-   **Required Sections:**
-   - **1. Purpose of Dependency** - Must have a valid response (not empty)
-   - **2. Technical Justification** - Must have a valid response (not empty)
+   **Step 1 - Check Template Structure:**
+   - **1. Purpose of Dependency** - Must have a valid response (not empty, not placeholder)
+   - **2. Technical Justification** - Must have a valid response (not empty, not placeholder)
    - **3. Dependency Health & Security Validation** - ALL three checkboxes must be checked:
      - `[x]` Active Maintenance
      - `[x]` License Compliance
      - `[x]` Security Posture
 
-   **If validation FAILS:**
+   **Step 2 - Verify Content Alignment:**
+   - Get the actual dependencies being added/updated from `dependency-registry/go.yaml` changes
+   - Check if the "Purpose of Dependency" section describes these actual dependencies
+   - Check if the "Technical Justification" section justifies these actual dependencies
+   - Verify the descriptions match what is actually being changed in the PR
+
+   **If ANY validation FAILS:**
    - Do NOT proceed with analysis
-   - Post a simple comment explaining what is missing
+   - Post a simple comment explaining the issue
    - Exit immediately
 
    **Comment format for validation failure:**
-   Post a concise comment listing only what is missing or invalid. Example:
    - "PR body validation failed: Missing valid response for 'Purpose of Dependency' section"
    - "PR body validation failed: Missing valid response for 'Technical Justification' section"
    - "PR body validation failed: Not all checkboxes are checked in 'Dependency Health & Security Validation' section"
-   - Or combine: "PR body validation failed: Missing valid responses for 'Purpose of Dependency' and 'Technical Justification', and not all checkboxes are checked"
+   - "PR body validation failed: The 'Purpose of Dependency' section does not match the actual dependencies being added/updated (mentions [X] but PR adds [Y])"
+   - "PR body validation failed: The 'Technical Justification' section does not align with the actual changes in the PR"
 
 2. **Fetch PR & Files**: Get PR details and `dependency-registry/go.yaml` from base and head branches
 3. **Compare YAML**: Identify NEW, UPDATED, or REMOVED modules
