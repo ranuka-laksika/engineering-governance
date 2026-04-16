@@ -288,4 +288,10 @@ dependencies:
       - version: ">=v1.6.0"
         allowed_scopes:
           - "*"
+
+  - module: github.com/hashicorp/terraform
+    versions:
+      - version: ">=v1.6.0"
+        allowed_scopes:
+          - "*"
         
