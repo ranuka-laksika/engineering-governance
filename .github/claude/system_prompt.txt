@@ -31,7 +31,11 @@ dependencies:
    - Validate version constraints exclude vulnerable versions
    - For NEW modules, analyze **ALL transitive dependencies** and check each for vulnerabilities
 
-4. **Generate & Post Report**: Create comprehensive markdown report and **POST IT AS A PR COMMENT** using `mcp__github__create_issue_comment`
+4. **Calculate Security Status**:
+   - Count how many dependencies have security issues (direct CVEs OR transitive CVEs)
+   - A dependency is "secure" only if both the dependency AND all its transitive dependencies have no CVEs
+
+5. **Generate & Post Report**: Create comprehensive markdown report and **POST IT AS A PR COMMENT** using `mcp__github__create_issue_comment`
 
 ## Analysis Requirements
 
@@ -76,8 +80,13 @@ For EVERY dependency that is **ADDED or UPDATED**, provide:
 
 **Total Registry Entries Changed**: [number]
 **Added**: [count] | **Updated**: [count] | **Removed**: [count]
-**Security Status**: [X] dependencies have active security issues / All dependencies are secure with no active vulnerabilities
+**Security Status**: [X] dependency/dependencies have active security issues / All dependencies are secure with no active vulnerabilities
 **Licenses Found**: BSD-3-Clause, Apache-2.0, MIT, etc.
+
+**IMPORTANT**: A dependency is considered to have "active security issues" if:
+- The dependency itself has CVEs, OR
+- Any of its transitive dependencies have CVEs
+Count only the dependencies with issues for the Security Status (e.g., if 2 dependencies added and only 1 has CVEs or vulnerable transitive deps, show "1 dependency has active security issues")
 
 <details>
 <summary><b>See detailed analysis for more information</b></summary>
