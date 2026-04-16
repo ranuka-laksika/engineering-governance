@@ -72,6 +72,8 @@ For EVERY dependency that is **ADDED or UPDATED**, provide:
 ### License Information
 - License type (MIT, BSD, Apache 2.0, GPL, LGPL, MPL, EPL, CDDL, ISC, Unlicense, proprietary, etc.)
 - License location/source
+- Apache 2.0 compatibility status
+- If unsure about Apache 2.0 compatibility, use WebSearch to verify (search for "[license name] Apache 2.0 compatibility")
 
 ### Activity & Freshness
 - Minimum version in constraint (e.g., for `>=v1.2.3`, check v1.2.3)
@@ -109,12 +111,19 @@ For EVERY dependency that is **ADDED or UPDATED**, provide:
 **Total Registry Entries Changed**: [number]
 **Added**: [count] | **Updated**: [count] | **Removed**: [count]
 **Security Status**: [X] dependency/dependencies have active security issues / All dependencies are secure with no active vulnerabilities
-**Licenses Found**: BSD-3-Clause, Apache-2.0, MIT, etc.
+**Licenses Found**: BSD-3-Clause (Apache 2.0 compatible), MIT (Apache 2.0 compatible) / GPL-3.0 (⚠️ Not Apache 2.0 compatible), LGPL (⚠️ Not Apache 2.0 compatible)
 
-**IMPORTANT**: A dependency is considered to have "active security issues" if:
-- The dependency itself has CVEs, OR
-- Any of its transitive dependencies have CVEs
-Count only the dependencies with issues for the Security Status (e.g., if 2 dependencies added and only 1 has CVEs or vulnerable transitive deps, show "1 dependency has active security issues")
+**IMPORTANT**:
+- A dependency is considered to have "active security issues" if:
+  - The dependency itself has CVEs, OR
+  - Any of its transitive dependencies have CVEs
+- Count only the dependencies with issues for the Security Status (e.g., if 2 dependencies added and only 1 has CVEs or vulnerable transitive deps, show "1 dependency has active security issues")
+- For each license, check Apache 2.0 compatibility and indicate the status:
+  - **Apache 2.0 compatible**: MIT, BSD-2-Clause, BSD-3-Clause, ISC, Apache-2.0, Unlicense
+  - **⚠️ Not Apache 2.0 compatible**: GPL, LGPL, AGPL, proprietary licenses
+  - **⚠️ Requires review**: MPL-2.0, EPL, CDDL
+  - **Unknown licenses**: Use WebSearch to find Apache 2.0 compatibility information
+- Format: "License-Name (Apache 2.0 compatible)" or "License-Name (⚠️ Not Apache 2.0 compatible)" or "License-Name (⚠️ Requires review)"
 
 <details>
 <summary><b>See detailed analysis for more information</b></summary>
@@ -204,10 +213,11 @@ Note: All links must be specific to the dependency being analyzed. Do not includ
 1. **Analyze EVERY** added/updated registry entry
 2. **Validate version constraints** exclude vulnerable versions
 3. **Use official sources**: pkg.go.dev, GitHub, NVD
-4. **Post complete report** to PR using `mcp__github__create_issue_comment` - THIS IS MANDATORY
-5. **List all resources** used in analysis - **ALL links must be specific to each dependency being analyzed**
-6. **Provide factual information only**: Do not make recommendations or decisions - present the data for reviewer evaluation
-7. **No symbols except warnings**: Do NOT use any emoji or symbols (✅, ❌, 🟢, 🟡, 🔴, ⭐, etc.) in the report. ONLY use ⚠️ to highlight issues that need attention
+4. **Use WebSearch for unknown licenses**: If you encounter a license and are unsure about Apache 2.0 compatibility, use WebSearch to verify
+5. **Post complete report** to PR using `mcp__github__create_issue_comment` - THIS IS MANDATORY
+6. **List all resources** used in analysis - **ALL links must be specific to each dependency being analyzed**
+7. **Provide factual information only**: Do not make recommendations or decisions - present the data for reviewer evaluation
+8. **No symbols except warnings**: Do NOT use any emoji or symbols (✅, ❌, 🟢, 🟡, 🔴, ⭐, etc.) in the report. ONLY use ⚠️ to highlight issues that need attention
 
 ## Error Handling
 - Cannot verify: Mark as "⚠️ Unable to verify" and explain
