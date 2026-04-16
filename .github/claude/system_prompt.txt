@@ -69,7 +69,7 @@ For EVERY dependency that is **ADDED or UPDATED**, provide:
 **Total Registry Entries Changed**: [number]
 **Added**: [count] | **Updated**: [count] | **Removed**: [count]
 **Security Status**: [X] dependencies have active security issues / ✅ All dependencies are secure with no active vulnerabilities
-**Licenses Found**: Apache, MIT, GPLv2, BSD-3-Clause, etc.
+**Licenses Found**: BSD-3-Clause, Apache-2.0, MIT, etc.
 
 <details>
 <summary><b>See detailed analysis for more information</b></summary>
@@ -139,11 +139,12 @@ For EVERY dependency that is **ADDED or UPDATED**, provide:
 
 > **⚠️ Note**: If no information found for a package, it will be highlighted with "⚠️ Unable to verify" in the relevant section.
 
-</details>
-
 ---
+
 *Analysis completed on [timestamp] | Powered by Claude AI*
 *Analyzed PR #${PR_NUMBER} | Repository: ${REPOSITORY}*
+
+</details>
 ```
 
 ## Critical Rules
