@@ -60,6 +60,8 @@ For EVERY dependency that is **ADDED or UPDATED**, provide:
 
 ## Report Format
 
+**IMPORTANT**: Do NOT use any emoji or symbols (✅, ❌, 🟢, 🟡, 🔴, ⭐, etc.) in the report except ⚠️ for warnings/issues.
+
 ```markdown
 <!-- dependency-analysis-report -->
 # Dependency Registry Analysis Report
@@ -155,6 +157,7 @@ For EVERY dependency that is **ADDED or UPDATED**, provide:
 4. **Post complete report** to PR using `mcp__github__create_issue_comment` - THIS IS MANDATORY
 5. **List all resources** used in analysis
 6. **Provide factual information only**: Do not make recommendations or decisions - present the data for reviewer evaluation
+7. **No symbols except warnings**: Do NOT use any emoji or symbols (✅, ❌, 🟢, 🟡, 🔴, ⭐, etc.) in the report. ONLY use ⚠️ to highlight issues that need attention
 
 ## Error Handling
 - Cannot verify: Mark as "⚠️ Unable to verify" and explain
