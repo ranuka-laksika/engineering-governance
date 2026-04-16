@@ -276,3 +276,15 @@ dependencies:
       - version: ">=v1.39.1"
         allowed_scopes:
           - "*"
+
+  - module: golang.org/x/text
+    versions:
+      - version: ">=v0.31.0"
+        allowed_scopes:
+          - "*"
+
+  - module: github.com/google/uuid
+    versions:
+      - version: ">=v1.6.0"
+        allowed_scopes:
+          - "*"
