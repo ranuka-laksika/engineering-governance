@@ -29,7 +29,7 @@ dependencies:
    - Check pkg.go.dev/vuln for vulnerabilities
    - Check GitHub repository and license
    - Validate version constraints exclude vulnerable versions
-   - For NEW modules, analyze transitive dependencies
+   - For NEW modules, analyze **ALL transitive dependencies** and check each for vulnerabilities
 
 4. **Generate & Post Report**: Create comprehensive markdown report and **POST IT AS A PR COMMENT** using `mcp__github__create_issue_comment`
 
@@ -52,15 +52,21 @@ For EVERY dependency that is **ADDED or UPDATED**, provide:
 - Check https://pkg.go.dev/vuln/[module-path]
 - Verify version constraint **excludes** vulnerable versions
 - List ALL CVEs: ID, Severity, Affected versions, Fixed version, CVSS
+- **MUST include direct links to each CVE for this specific dependency** in the References section (e.g., https://nvd.nist.gov/vuln/detail/CVE-XXXX-XXXXX or https://osv.dev/vulnerability/GO-XXXX-XXXX)
 
 ### Transitive Dependencies
-- For NEW modules: List top 5-10 critical transitive dependencies
-- Check security of high-risk deps (crypto, network, auth)
-- Flag vulnerable transitive dependencies
+- For NEW modules: **Check ALL transitive dependencies for vulnerabilities**
+- List all transitive dependencies with their versions
+- **Flag ANY vulnerable transitive dependencies** with CVE details
+- Pay special attention to high-risk deps (crypto, network, auth, parsing)
+- If a direct dependency has zero vulnerabilities but transitive dependencies have vulnerabilities, report them
 
 ## Report Format
 
-**IMPORTANT**: Do NOT use any emoji or symbols (✅, ❌, 🟢, 🟡, 🔴, ⭐, etc.) in the report except ⚠️ for warnings/issues.
+**CRITICAL**:
+- Follow this EXACT format for EVERY PR - do not deviate from this structure
+- Do NOT use any emoji or symbols (✅, ❌, 🟢, 🟡, 🔴, ⭐, etc.) in the report except ⚠️ for warnings/issues
+- Maintain consistent formatting across all PRs
 
 ```markdown
 <!-- dependency-analysis-report -->
@@ -101,18 +107,23 @@ For EVERY dependency that is **ADDED or UPDATED**, provide:
 
 </details>
 
-- **Transitive Dependencies**:
-  - `golang.org/x/net:v0.20.0` - ⚠️ 2 active CVEs
+- **Transitive Dependencies**: [total count] dependencies analyzed
+  - `golang.org/x/net:v0.20.0` - ⚠️ 2 active CVEs (CVE-2024-XXXXX, CVE-2024-YYYYY)
   - `golang.org/x/sys:v0.16.0` - No known CVEs
   - `github.com/example/dep:v2.1.0` - No known CVEs
+  - [List ALL transitive dependencies with their vulnerability status]
 
 <details>
 <summary>References</summary>
 
-- **Repository**: https://github.com/example/package
-- **Documentation**: https://pkg.go.dev/github.com/example/package
-- **License**: https://github.com/example/package/blob/main/LICENSE
-- **Vulnerabilities**: https://pkg.go.dev/vuln/github.com/example/package
+- **Repository**: https://github.com/example/package (must be the actual repository for this specific dependency)
+- **Documentation**: https://pkg.go.dev/github.com/example/package (must be the actual pkg.go.dev page for this specific dependency)
+- **License**: https://github.com/example/package/blob/main/LICENSE (must link to the actual license file for this specific dependency)
+- **Vulnerabilities Database**: https://pkg.go.dev/vuln/github.com/example/package (must be the actual vulnerability page for this specific dependency)
+- **CVE-2024-12345**: https://nvd.nist.gov/vuln/detail/CVE-2024-12345 (only include if this CVE affects this specific dependency)
+- **CVE-2024-67890**: https://nvd.nist.gov/vuln/detail/CVE-2024-67890 (only include if this CVE affects this specific dependency)
+
+Note: All links must be specific to the dependency being analyzed. Do not include generic or example links.
 
 </details>
 
@@ -123,7 +134,9 @@ For EVERY dependency that is **ADDED or UPDATED**, provide:
 - **License**: MIT
 - **Version status**: Latest version
 - **Security**: No known CVEs
-- **Transitive Dependencies**: [X] dependencies analyzed, all secure
+- **Transitive Dependencies**: [X] dependencies analyzed
+  - [List each transitive dependency with vulnerability status]
+  - Summary: All secure / ⚠️ [X] vulnerable dependencies found
 
 <details>
 <summary>References</summary>
@@ -155,7 +168,7 @@ For EVERY dependency that is **ADDED or UPDATED**, provide:
 2. **Validate version constraints** exclude vulnerable versions
 3. **Use official sources**: pkg.go.dev, GitHub, NVD
 4. **Post complete report** to PR using `mcp__github__create_issue_comment` - THIS IS MANDATORY
-5. **List all resources** used in analysis
+5. **List all resources** used in analysis - **ALL links must be specific to each dependency being analyzed**
 6. **Provide factual information only**: Do not make recommendations or decisions - present the data for reviewer evaluation
 7. **No symbols except warnings**: Do NOT use any emoji or symbols (✅, ❌, 🟢, 🟡, 🔴, ⭐, etc.) in the report. ONLY use ⚠️ to highlight issues that need attention
 
@@ -172,10 +185,12 @@ mcp__github__create_issue_comment(
   owner: [from ${REPOSITORY}],
   repo: [from ${REPOSITORY}],
   issue_number: ${PR_NUMBER},
-  body: [COMPLETE MARKDOWN REPORT]
+  body: [COMPLETE MARKDOWN REPORT - MUST follow the exact format specified above]
 )
 ```
 
 **Your task is INCOMPLETE until the comment is posted to PR #${PR_NUMBER}!**
+
+**IMPORTANT**: The report structure must be IDENTICAL for every PR - only the data changes, not the format.
 
 Remember: You are analyzing a REGISTRY (go.yaml), not project dependencies (go.mod). Provide factual analysis of security, licensing, and maintenance data for ADDED/UPDATED modules. The reviewer will make the final decision on whether modules should be allowed.
