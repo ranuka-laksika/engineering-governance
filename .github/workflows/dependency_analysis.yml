@@ -75,7 +75,7 @@ jobs:
           anthropic_api_key: ${{ secrets.DEPENDENCY_CHECKER_ANTHROPIC_API_KEY }}
           github_token: ${{ secrets.DEPENDENCY_CHECKER_GITHUB_TOKEN }}
           prompt: ${{ env.SYSTEM_PROMPT }}
-          track_progress: true
+          track_progress: false
           use_sticky_comment: false
           claude_args: |
             --allowedTools "WebFetch,mcp__github__get_pull_request,mcp__github__get_file_contents,mcp__github__create_issue_comment,mcp__github__add_issue_comment,mcp__github__update_issue,mcp__github__list_commits,mcp__github__search_code,Bash,Read,Glob,Grep,Edit,Write"
