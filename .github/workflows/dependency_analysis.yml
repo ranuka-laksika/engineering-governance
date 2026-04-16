@@ -2,9 +2,7 @@ name: Claude Code • Dependency Analysis
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened]
-    paths:
-      - 'dependency-registry/go.yaml'
+    types: [opened, synchronize, reopened, edited]
 
 permissions:
   pull-requests: write
@@ -37,8 +35,33 @@ jobs:
           echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
           echo "Analyzing PR #$PR_NUMBER"
 
+      - name: Check if PR modifies dependency registry
+        id: check_files
+        run: |
+          # Get list of changed files in the PR
+          CHANGED_FILES=$(gh api \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            /repos/${{ github.repository }}/pulls/${{ steps.get_pr.outputs.pr_number }}/files \
+            --jq '.[].filename')
+
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+
+          # Check if dependency-registry/go.yaml is in the changed files
+          if echo "$CHANGED_FILES" | grep -q "^dependency-registry/go.yaml$"; then
+            echo "dependency_registry_modified=true" >> $GITHUB_OUTPUT
+            echo "Dependency registry file modified - proceeding with analysis"
+          else
+            echo "dependency_registry_modified=false" >> $GITHUB_OUTPUT
+            echo "Dependency registry file not modified - skipping analysis"
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.DEPENDENCY_CHECKER_GITHUB_TOKEN }}
+
       - name: Prepare system prompt with environment variables
         id: prepare_prompt
+        if: steps.check_files.outputs.dependency_registry_modified == 'true'
         run: |
           # Install envsubst if not available
           if ! command -v envsubst &> /dev/null; then
@@ -66,6 +89,7 @@ jobs:
 
       - name: Run Claude Dependency Analysis
         id: run_claude
+        if: steps.check_files.outputs.dependency_registry_modified == 'true'
         uses: anthropics/claude-code-action@v1
         env:
           PR_NUMBER: ${{ steps.get_pr.outputs.pr_number }}
@@ -83,6 +107,7 @@ jobs:
 
       - name: Verify analysis result
         id: verify_result
+        if: steps.check_files.outputs.dependency_registry_modified == 'true'
         run: |
           echo "Waiting for Claude analysis to complete and comment to be posted..."
           sleep 10
