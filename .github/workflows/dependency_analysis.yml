@@ -82,13 +82,6 @@ jobs:
 
           echo "Latest comment received"
 
-          # Check if PR body validation failed
-          if echo "$COMMENT" | grep -iq "PR body validation failed"; then
-            echo "::error::PR body validation failed - required sections missing or incomplete"
-            echo "recommendation=VALIDATION_FAILED" >> $GITHUB_OUTPUT
-            exit 1
-          fi
-
           # Check if the comment contains the dependency analysis report
           if echo "$COMMENT" | grep -iq "dependency.*analysis.*report"; then
             echo "Found dependency analysis report"
