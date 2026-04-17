@@ -34,8 +34,18 @@ dependencies:
 4. **Calculate Security Status**:
    - Count how many dependencies have security issues (direct CVEs OR transitive CVEs)
    - A dependency is "secure" only if both the dependency AND all its transitive dependencies have no CVEs
+   - If ANY dependencies have issues: Use "⚠️ [X] dependency/dependencies have active security issues"
+   - If ALL dependencies are secure: Use "All dependencies are secure with no active vulnerabilities"
 
-5. **Generate & Post Report**: Create comprehensive markdown report and **POST IT AS A PR COMMENT** using `mcp__github__create_issue_comment`
+5. **Calculate License Compatibility**:
+   - For each unique license found, determine Apache 2.0 compatibility:
+     - **Apache 2.0 compatible**: MIT, BSD-2-Clause, BSD-3-Clause, ISC, Apache-2.0, Unlicense
+     - **⚠️ Not Apache 2.0 compatible**: GPL, LGPL, AGPL, BUSL (Business Source License), proprietary licenses
+     - **⚠️ Requires review**: MPL-2.0, EPL, CDDL
+   - If unknown license, use WebSearch to determine compatibility
+   - Format each license as: "License-Name (Apache 2.0 compatible)" or "License-Name (⚠️ Not Apache 2.0 compatible)"
+
+6. **Generate & Post Report**: Create comprehensive markdown report and **POST IT AS A PR COMMENT** using `mcp__github__create_issue_comment`
 
 ## Analysis Requirements
 
@@ -69,10 +79,12 @@ For EVERY dependency that is **ADDED or UPDATED**, provide:
 
 ## Report Format
 
-**CRITICAL**:
+**CRITICAL FORMATTING RULES**:
 - Follow this EXACT format for EVERY PR - do not deviate from this structure
+- Do NOT add any "IMPORTANT" sections, notes, or additional commentary outside this structure
 - Do NOT use any emoji or symbols (✅, ❌, 🟢, 🟡, 🔴, ⭐, etc.) in the report except ⚠️ for warnings/issues
-- Maintain consistent formatting across all PRs
+- Maintain 100% identical structure across all PRs - only the data changes, never the format
+- Do NOT add summary notes, key findings, or additional observations outside the defined structure
 
 ```markdown
 <!-- dependency-analysis-report -->
@@ -84,20 +96,6 @@ For EVERY dependency that is **ADDED or UPDATED**, provide:
 **Added**: [count] | **Updated**: [count] | **Removed**: [count]
 **Security Status**: ⚠️ [X] dependency/dependencies have active security issues / All dependencies are secure with no active vulnerabilities
 **Licenses Found**: BSD-3-Clause (Apache 2.0 compatible), MIT (Apache 2.0 compatible) / GPL-3.0 (⚠️ Not Apache 2.0 compatible), LGPL (⚠️ Not Apache 2.0 compatible)
-
-**IMPORTANT**:
-- A dependency is considered to have "active security issues" if:
-  - The dependency itself has CVEs, OR
-  - Any of its transitive dependencies have CVEs
-- Count only the dependencies with issues for the Security Status
-- **Add ⚠️ symbol if there are ANY security issues**: "⚠️ 1 dependency has active security issues" or "⚠️ 2 dependencies have active security issues"
-- **No warning symbol if all secure**: "All dependencies are secure with no active vulnerabilities"
-- For each license, check Apache 2.0 compatibility and indicate the status:
-  - **Apache 2.0 compatible**: MIT, BSD-2-Clause, BSD-3-Clause, ISC, Apache-2.0, Unlicense
-  - **⚠️ Not Apache 2.0 compatible**: GPL, LGPL, AGPL, proprietary licenses
-  - **⚠️ Requires review**: MPL-2.0, EPL, CDDL
-  - **Unknown licenses**: Use WebSearch to find Apache 2.0 compatibility information
-- Format: "License-Name (Apache 2.0 compatible)" or "License-Name (⚠️ Not Apache 2.0 compatible)" or "License-Name (⚠️ Requires review)"
 
 <details>
 <summary><b>See detailed analysis for more information</b></summary>
