@@ -8,9 +8,7 @@ on:
 
 permissions:
   pull-requests: write
-  contents: write
-  issues: write
-
+  contents: read
 jobs:
   analyze-dependencies:
     runs-on: ubuntu-latest
@@ -27,8 +25,8 @@ jobs:
 
       - name: Configure git
         run: |
-          git config user.name "${{ secrets.DEPENDENCY_CHECKER_GIT_USER_NAME }}"
-          git config user.email "${{ secrets.DEPENDENCY_CHECKER_GIT_USER_EMAIL }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Get PR number
         id: get_pr
@@ -73,7 +71,7 @@ jobs:
           ISSUE_NUMBER: ${{ steps.get_pr.outputs.pr_number }}
         with:
           anthropic_api_key: ${{ secrets.DEPENDENCY_CHECKER_ANTHROPIC_API_KEY }}
-          github_token: ${{ secrets.DEPENDENCY_CHECKER_GITHUB_TOKEN }}
+          github_token: ${{ github.token }}
           prompt: ${{ env.SYSTEM_PROMPT }}
           track_progress: false
           use_sticky_comment: false
@@ -113,7 +111,7 @@ jobs:
             echo "recommendation=UNKNOWN" >> $GITHUB_OUTPUT
           fi
         env:
-          GH_TOKEN: ${{ secrets.DEPENDENCY_CHECKER_GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
 
       - name: Analysis complete
         if: success()
