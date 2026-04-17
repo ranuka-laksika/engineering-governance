@@ -16,15 +16,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Get PR number
-        id: get_pr
-        run: |
-          PR_NUMBER=${{ github.event.pull_request.number }}
-          echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
-          echo "Analyzing PR #$PR_NUMBER"
 
       - name: Prepare system prompt with environment variables
         id: prepare_prompt
@@ -35,7 +26,7 @@ jobs:
           fi
 
           # Set environment variables
-          export PR_NUMBER="${{ steps.get_pr.outputs.pr_number }}"
+          export PR_NUMBER="${{ github.event.pull_request.number }}"
           export REPOSITORY="${{ github.repository }}"
 
           # Substitute variables in system prompt
@@ -46,17 +37,9 @@ jobs:
           echo "$SYSTEM_PROMPT" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
 
-          echo "PR_NUMBER=$PR_NUMBER" >> $GITHUB_ENV
-          echo "REPOSITORY=$REPOSITORY" >> $GITHUB_ENV
-
-          echo "System prompt prepared for PR #$PR_NUMBER"
-
       - name: Run Claude Dependency Analysis
         id: run_claude
         uses: anthropics/claude-code-action@v1
-        env:
-          PR_NUMBER: ${{ steps.get_pr.outputs.pr_number }}
-          REPOSITORY: ${{ github.repository }}
         with:
           anthropic_api_key: ${{ secrets.DEPENDENCY_CHECKER_ANTHROPIC_API_KEY }}
           github_token: ${{ github.token }}
@@ -64,39 +47,5 @@ jobs:
           track_progress: false
           use_sticky_comment: false
           claude_args: |
-            --allowedTools "WebFetch,mcp__github__get_pull_request,mcp__github__get_file_contents,mcp__github__create_issue_comment,mcp__github__add_issue_comment,mcp__github__update_issue,Bash,Read,"
+            --allowedTools "WebFetch,mcp__github__get_pull_request,mcp__github__get_file_contents,mcp__github__create_issue_comment,mcp__github__add_issue_comment,mcp__github__update_issue,Bash,Read"
             --model claude-haiku-4-5-20251001
-
-      - name: Verify analysis result
-        id: verify_result
-        run: |
-          echo "Waiting for Claude analysis to complete and comment to be posted..."
-          sleep 10
-
-          # Fetch the latest PR comment from Claude
-          COMMENT=$(gh api \
-            -H "Accept: application/vnd.github+json" \
-            -H "X-GitHub-Api-Version: 2022-11-28" \
-            /repos/${{ github.repository }}/issues/${{ steps.get_pr.outputs.pr_number }}/comments \
-            --jq '.[-1].body' 2>/dev/null || echo "")
-
-          echo "Latest comment received"
-
-          # Check if the comment contains the dependency analysis report
-          if echo "$COMMENT" | grep -iq "dependency.*analysis.*report"; then
-            echo "Found dependency analysis report"
-            echo "recommendation=ANALYSIS_COMPLETE" >> $GITHUB_OUTPUT
-          else
-            echo "::warning::Could not find dependency analysis report in comments"
-            echo "Check the PR comments manually for the analysis"
-            echo "recommendation=UNKNOWN" >> $GITHUB_OUTPUT
-          fi
-        env:
-          GH_TOKEN: ${{ github.token }}
-
-      - name: Analysis complete
-        if: success()
-        run: |
-          echo "Dependency analysis completed for PR #${{ steps.get_pr.outputs.pr_number }}"
-          echo "Recommendation: ${{ steps.verify_result.outputs.recommendation }}"
-          echo "Check the PR comments for the detailed analysis report"
