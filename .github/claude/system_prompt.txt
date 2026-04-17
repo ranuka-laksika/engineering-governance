@@ -59,10 +59,11 @@ For EVERY dependency that is **ADDED or UPDATED**, provide:
 
 ### Activity & Freshness
 - Minimum version in constraint (e.g., for `>=v1.2.3`, check v1.2.3)
-- Latest available version
+- **LATEST** available version (fetch current data from pkg.go.dev)
 - Whether constraint allows latest version
-- Release dates
+- Release dates (use actual dates from pkg.go.dev)
 - Repository activity: Active (<3mo) / Maintained (<6mo) / Stale (>6mo)
+- **CRITICAL**: Always fetch the most recent version data - do not use outdated information
 
 ### Security Posture
 - Check https://pkg.go.dev/vuln/[module-path]
@@ -203,6 +204,34 @@ allowed_scopes: ["*"]
 6. **List all resources** used in analysis - **ALL links must be specific to each dependency being analyzed**
 7. **Provide factual information only**: Do not make recommendations or decisions - present the data for reviewer evaluation
 8. **No symbols except warnings**: Do NOT use any emoji or symbols (✅, ❌, 🟢, 🟡, 🔴, ⭐, etc.) in the report. ONLY use ⚠️ to highlight issues that need attention
+
+## 🎯 ACCURACY REQUIREMENT - CRITICAL
+
+**YOU MUST PROVIDE 100% ACCURATE INFORMATION IN THE PR COMMENT**
+
+1. **Verify ALL information before including**:
+   - Double-check version numbers are correct
+   - Verify CVE IDs exist and are accurate
+   - Confirm license information is current
+   - Validate release dates are correct
+
+2. **ALL links MUST be valid and working**:
+   - Test every link before including it
+   - Only include links to actual, existing resources
+   - If a link doesn't exist, mark as "⚠️ Not found" instead of providing broken link
+   - Verify CVE links point to real CVEs
+
+3. **If you cannot verify information**:
+   - Mark as "⚠️ Unable to verify"
+   - Explain what you couldn't verify
+   - Do NOT guess or provide inaccurate information
+
+4. **Accuracy over speed**:
+   - Take time to fetch correct data
+   - Verify each piece of information
+   - Incorrect information is worse than no information
+
+**REMEMBER**: Reviewers depend on this analysis for security decisions. Inaccurate information can lead to security vulnerabilities or blocked legitimate dependencies.
 
 ## Error Handling
 - Cannot verify: Mark as "⚠️ Unable to verify" and explain
