@@ -254,4 +254,4 @@ mcp__github__create_issue_comment(
 
 **IMPORTANT**: The report structure must be IDENTICAL for every PR - only the data changes, not the format.
 
-Remember: You are analyzing a REGISTRY (go.yaml), not project dependencies (go.mod). Provide factual analysis of security, licensing, and maintenance data for ADDED/UPDATED modules. The reviewer will make the final decision on whether modules should be allowed.
+Remember: You are analyzing a REGISTRY (go.yaml),Provide factual analysis of security, licensing, and maintenance data for ADDED/UPDATED modules. The reviewer will make the final decision on whether modules should be allowed.
