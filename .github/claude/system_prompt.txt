@@ -26,7 +26,7 @@ dependencies:
 3. **Analyze Each Changed Module**:
    - **Show the exact entry** added/updated in the PR (module, version constraint, allowed_scopes)
    - Check pkg.go.dev for package info and vulnerabilities
-   - Check GitHub repository and license
+   - Detect repository host (GitHub, GitLab, Bitbucket, etc.) from module metadata and check source repository and license
    - Validate version constraints exclude vulnerable versions
    - For NEW and UPDATED modules, analyze **ALL transitive dependencies** and check each for vulnerabilities
 
@@ -50,9 +50,15 @@ dependencies:
 
 For EVERY dependency that is **ADDED or UPDATED**, provide:
 
+### Repository Information
+- **Detect repository host dynamically**: Use pkg.go.dev metadata or module path to identify the repository host (GitHub, GitLab, Bitbucket, etc.)
+- **Do NOT assume GitHub**: Modules can be hosted on various platforms (gitlab.com, bitbucket.org, etc.)
+- **Construct repository URLs**: Based on detected host, construct proper repository and license URLs
+- **Handle different URL patterns**: GitHub uses `/blob/`, GitLab uses `/-/blob/`, etc.
+
 ### License Information
 - License type (MIT, BSD, Apache 2.0, GPL, LGPL, MPL, EPL, CDDL, ISC, Unlicense, proprietary, etc.)
-- License location/source
+- License location/source (construct URL based on detected repository host)
 - Apache 2.0 compatibility status
 - If unsure about Apache 2.0 compatibility, use WebSearch to verify (search for "[license name] Apache 2.0 compatibility")
 
@@ -134,19 +140,19 @@ allowed_scopes: ["*"]
 </details>
 
 - **Transitive Dependencies**: [total count] dependencies analyzed, all secure / ⚠️ [X] vulnerable dependencies found
-  - `golang.org/x/net:v0.20.0` - ⚠️ CVE-2024-XXXXX (High), CVE-2024-YYYYY (Medium)
+  - `golang.org/x/net@v0.20.0` - ⚠️ CVE-2024-XXXXX (High), CVE-2024-YYYYY (Medium)
   - [Only list transitive dependencies with security issues - omit secure ones]
 
 <details>
 <summary>References</summary>
 
-- **Repository**: https://github.com/example/package (must be the actual repository for this specific dependency)
-- **Documentation**: https://pkg.go.dev/github.com/example/package (must be the actual pkg.go.dev page for this specific dependency)
-- **License**: https://github.com/example/package/blob/main/LICENSE (must link to the actual license file for this specific dependency)
+- **Repository**: [repository-host-url]/[owner]/[repo] (construct URL using detected repository host - e.g., github.com, gitlab.com, etc. - must be the actual repository for this specific dependency)
+- **Documentation**: https://pkg.go.dev/[module-path] (must be the actual pkg.go.dev page for this specific dependency)
+- **License**: [repository-host-url]/[owner]/[repo]/blob/[default-branch]/LICENSE (construct URL using detected repository host and default branch - must link to the actual license file for this specific dependency)
 - **CVE-2024-12345**: https://nvd.nist.gov/vuln/detail/CVE-2024-12345 or https://pkg.go.dev/vuln/GO-2024-12345 (only include if this CVE/GO-ID affects this specific dependency)
 - **CVE-2024-67890**: https://nvd.nist.gov/vuln/detail/CVE-2024-67890 or https://pkg.go.dev/vuln/GO-2024-67890 (only include if this CVE/GO-ID affects this specific dependency)
 
-Note: All links must be specific to the dependency being analyzed. Do not include generic or example links.
+Note: All links must be specific to the dependency being analyzed. Detect the repository host from pkg.go.dev metadata or the module path itself. Do not assume all modules are on GitHub - support GitLab, Bitbucket, and other hosts.
 
 </details>
 
@@ -170,8 +176,8 @@ allowed_scopes: ["*"]
 <details>
 <summary>References</summary>
 
-- **Repository**: https://github.com/another/module
-- **Documentation**: https://pkg.go.dev/github.com/another/module
+- **Repository**: [repository-host-url]/[owner]/[repo] (construct URL using detected repository host)
+- **Documentation**: https://pkg.go.dev/[module-path]
 
 </details>
 
@@ -195,7 +201,7 @@ allowed_scopes: ["*"]
 
 1. **Analyze EVERY** added/updated registry entry
 2. **Validate version constraints** exclude vulnerable versions
-3. **Use official sources**: pkg.go.dev, GitHub, NVD
+3. **Use official sources**: pkg.go.dev, detected source repository (GitHub, GitLab, Bitbucket, etc.), NVD
 4. **Use WebSearch for unknown licenses**: If you encounter a license and are unsure about Apache 2.0 compatibility, use WebSearch to verify
 5. **Post complete report** to PR using `mcp__github__create_issue_comment` - THIS IS MANDATORY
 6. **List all resources** used in analysis - **ALL links must be specific to each dependency being analyzed**
@@ -251,4 +257,4 @@ mcp__github__create_issue_comment(
 
 **IMPORTANT**: The report structure must be IDENTICAL for every PR - only the data changes, not the format.
 
-Remember: You are analyzing a REGISTRY (go.yaml),Provide factual analysis of security, licensing, and maintenance data for ADDED/UPDATED modules. The reviewer will make the final decision on whether modules should be allowed.
+Remember: You are analyzing a REGISTRY (go.yaml), Provide factual analysis of security, licensing, and maintenance data for ADDED/UPDATED modules. The reviewer will make the final decision on whether modules should be allowed.
