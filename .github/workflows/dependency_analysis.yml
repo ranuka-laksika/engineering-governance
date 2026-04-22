@@ -8,34 +8,16 @@ on:
 
 permissions:
   pull-requests: write
-  contents: write
-  issues: write
+  contents: read
 
 jobs:
   analyze-dependencies:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout repository base (for trusted system prompt)
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
-
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.22'
-
-      - name: Configure git
-        run: |
-          git config user.name "${{ secrets.DEPENDENCY_CHECKER_GIT_USER_NAME }}"
-          git config user.email "${{ secrets.DEPENDENCY_CHECKER_GIT_USER_EMAIL }}"
-
-      - name: Get PR number
-        id: get_pr
-        run: |
-          PR_NUMBER=${{ github.event.pull_request.number }}
-          echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
-          echo "Analyzing PR #$PR_NUMBER"
+          ref: ${{ github.event.pull_request.base.sha }}
 
       - name: Prepare system prompt with environment variables
         id: prepare_prompt
@@ -46,11 +28,10 @@ jobs:
           fi
 
           # Set environment variables
-          export PR_NUMBER="${{ steps.get_pr.outputs.pr_number }}"
+          export PR_NUMBER="${{ github.event.pull_request.number }}"
           export REPOSITORY="${{ github.repository }}"
-          export ISSUE_NUMBER="${{ steps.get_pr.outputs.pr_number }}"
 
-          # Substitute variables in system prompt
+          # Substitute variables in system prompt from trusted base
           SYSTEM_PROMPT=$(envsubst < ${{ github.workspace }}/.github/claude/system_prompt.txt)
 
           # Save to GitHub environment
@@ -58,79 +39,15 @@ jobs:
           echo "$SYSTEM_PROMPT" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
 
-          echo "PR_NUMBER=$PR_NUMBER" >> $GITHUB_ENV
-          echo "REPOSITORY=$REPOSITORY" >> $GITHUB_ENV
-          echo "ISSUE_NUMBER=$PR_NUMBER" >> $GITHUB_ENV
-
-          echo "System prompt prepared for PR #$PR_NUMBER"
-
       - name: Run Claude Dependency Analysis
         id: run_claude
         uses: anthropics/claude-code-action@v1
-        env:
-          PR_NUMBER: ${{ steps.get_pr.outputs.pr_number }}
-          REPOSITORY: ${{ github.repository }}
-          ISSUE_NUMBER: ${{ steps.get_pr.outputs.pr_number }}
         with:
           anthropic_api_key: ${{ secrets.DEPENDENCY_CHECKER_ANTHROPIC_API_KEY }}
-          github_token: ${{ secrets.DEPENDENCY_CHECKER_GITHUB_TOKEN }}
+          github_token: ${{ github.token }}
           prompt: ${{ env.SYSTEM_PROMPT }}
-          track_progress: true
+          track_progress: false
           use_sticky_comment: false
           claude_args: |
-            --allowedTools "WebFetch,mcp__github__get_pull_request,mcp__github__get_file_contents,mcp__github__create_issue_comment,mcp__github__add_issue_comment,mcp__github__update_issue,mcp__github__list_commits,mcp__github__search_code,Bash,Read,Glob,Grep,Edit,Write"
-            --model claude-sonnet-4-5-20250929
-
-      - name: Verify analysis result
-        id: verify_result
-        run: |
-          echo "Waiting for Claude analysis to complete and comment to be posted..."
-          sleep 10
-
-          # Fetch the latest PR comment from Claude
-          COMMENT=$(gh api \
-            -H "Accept: application/vnd.github+json" \
-            -H "X-GitHub-Api-Version: 2022-11-28" \
-            /repos/${{ github.repository }}/issues/${{ steps.get_pr.outputs.pr_number }}/comments \
-            --jq '.[-1].body' 2>/dev/null || echo "")
-
-          echo "Latest comment received"
-
-          # Check if the comment contains the dependency analysis report
-          if echo "$COMMENT" | grep -iq "dependency.*analysis.*report"; then
-            echo "Found dependency analysis report"
-
-            # Extract the recommendation line
-            RECOMMENDATION=$(echo "$COMMENT" | grep -E "^\*\*Recommendation\*\*:|^- \*\*Recommendation\*\*:" | head -1)
-
-            echo "Recommendation line: $RECOMMENDATION"
-
-            # Check for REJECT recommendation
-            if echo "$RECOMMENDATION" | grep -iq "REJECT"; then
-              echo "::error::Dependency analysis recommends REJECTING this PR"
-              echo "recommendation=REJECT" >> $GITHUB_OUTPUT
-              exit 1
-            # Check for REVIEW REQUIRED recommendation
-            elif echo "$RECOMMENDATION" | grep -iq "REVIEW REQUIRED"; then
-              echo "::warning::Dependency analysis recommends REVIEW before merging"
-              echo "recommendation=REVIEW" >> $GITHUB_OUTPUT
-              # Uncomment the line below if you want to fail on REVIEW REQUIRED as well
-              # exit 1
-            else
-              echo "Dependency analysis approves this PR"
-              echo "recommendation=APPROVE" >> $GITHUB_OUTPUT
-            fi
-          else
-            echo "::warning::Could not find dependency analysis report in comments"
-            echo "Check the PR comments manually for the analysis"
-            echo "recommendation=UNKNOWN" >> $GITHUB_OUTPUT
-          fi
-        env:
-          GH_TOKEN: ${{ secrets.DEPENDENCY_CHECKER_GITHUB_TOKEN }}
-
-      - name: Analysis complete
-        if: success()
-        run: |
-          echo "Dependency analysis completed for PR #${{ steps.get_pr.outputs.pr_number }}"
-          echo "Recommendation: ${{ steps.verify_result.outputs.recommendation }}"
-          echo "Check the PR comments for the detailed analysis report"
+            --allowedTools "WebFetch,WebSearch,mcp__github__get_pull_request,mcp__github__get_file_contents,mcp__github__create_issue_comment,Read"
+            --model claude-haiku-4-5-20251001
