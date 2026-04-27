@@ -1,7 +1,7 @@
-c# yaml-language-server: $schema=./schema.yaml
+# yaml-language-server: $schema=./schema.yaml
 language: go
 dependencies:
-  - module: golang.org/x/crypto/bcrypt
+  - module: golang.org/x/crypto
     versions:
       - version: ">=v0.31.0"
         allowed_scopes:
@@ -201,13 +201,13 @@ dependencies:
 
   - module: k8s.io/kube-openapi
     versions:
-      - version: "pseudo"
+      - version: "v0.0.0-20260414162039-ec9c827d403f"
         allowed_scopes:
           - "*"
 
   - module: k8s.io/utils
     versions:
-      - version: "pseudo"
+      - version: "v0.0.0-20260319190234-28399d86e0b5"
         allowed_scopes:
           - "*"
 
