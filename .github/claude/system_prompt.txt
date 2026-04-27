@@ -34,7 +34,9 @@ dependencies:
    - For NEW and UPDATED modules, analyze **ALL transitive dependencies** and check each for vulnerabilities
 
 4. **Calculate Security Status**:
-   - Count how many dependencies have security issues (direct CVEs OR transitive CVEs)
+   - Count **how many dependencies** (modules) have security issues, NOT the total number of CVEs
+   - Example: If 1 dependency has 5 CVEs, report "1 dependency has security issues"
+   - Example: If 2 dependencies each have CVEs, report "2 dependencies have security issues"
    - A dependency is "secure" only if both the dependency AND all its transitive dependencies have no CVEs
    - If ANY dependencies have issues: Use "⚠️ [X] dependency/dependencies have active security issues"
    - If ALL dependencies are secure: Use "All dependencies are secure with no active vulnerabilities"
@@ -124,7 +126,8 @@ For EVERY dependency that is **ADDED or UPDATED**, provide:
 **Security Status**: ⚠️ [X] dependency/dependencies have active security issues / All dependencies are secure with no active vulnerabilities
 **Licenses Found**: BSD-3-Clause (Compatible), MIT (Compatible) / GPL-3.0 (⚠️ Incompatible), LGPL (⚠️ Requires review)
 
-## Detailed Analysis
+<details>
+<summary><b>See detailed analysis for more information</b></summary>
 
 ---
 
@@ -212,6 +215,8 @@ allowed_scopes: ["*"]
 
 *Analysis completed on [timestamp]*
 *Analyzed PR #${PR_NUMBER} | Repository: ${REPOSITORY}*
+
+</details>
 ```
 
 ## Critical Rules
