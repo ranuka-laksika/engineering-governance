@@ -276,6 +276,7 @@ dependencies:
       - version: ">=v1.39.1"
         allowed_scopes:
           - "*"
+<<<<<<< new_branch_1
 
   - module: golang.org/x/text
     versions:
@@ -295,3 +296,5 @@ dependencies:
         allowed_scopes:
           - "*"
         
+=======
+>>>>>>> main

@@ -48,7 +48,7 @@ dependencies:
    - **Category X (Incompatible)**: GPL, AGPL, proprietary licenses
    - **LGPL**: Dynamic linking may be acceptable - mark as "⚠️ Requires review"
    - For unknown licenses, use WebSearch to verify against ASF policy
-   - Format: "License-Name (Compatible)" or "License-Name (⚠️ Incompatible)" or "License-Name (⚠️ Requires review)"
+   - Format: "License-Name (Apache 2.0 compatible)" or "License-Name (⚠️ Not Apache 2.0 compatible)" or "License-Name (⚠️ Requires review)"
 
 6. **Generate & Post Report**:
    - Before posting: List PR comments and search for `<!-- dependency-analysis-report -->`
@@ -61,8 +61,8 @@ dependencies:
 For EVERY dependency that is **ADDED or UPDATED**, provide:
 
 ### Repository Information
-- **Detect repository host dynamically**: Use pkg.go.dev metadata or module path to identify the repository host (GitHub, GitLab, Bitbucket, etc.)
-- **Do NOT assume GitHub**: Modules can be hosted on various platforms (gitlab.com, bitbucket.org, etc.)
+- **Detect repository host dynamically**: Use pkg.go.dev metadata or module path to identify the actual repository host
+- **Do NOT assume all modules are on GitHub**: Modules can be hosted on various platforms (GitHub, GitLab, Bitbucket, etc.) - always detect the actual host for each module
 - **Query default branch**: Use repository API to get default branch - do not assume main or master
 - **Construct repository URLs**: Based on detected host, construct proper repository and license URLs
 - **Handle different URL patterns**: GitHub uses `/blob/`, GitLab uses `/-/blob/`, etc.
@@ -124,7 +124,7 @@ For EVERY dependency that is **ADDED or UPDATED**, provide:
 **Total Registry Entries Changed**: [number]
 **Added**: [count] | **Updated**: [count] | **Removed**: [count]
 **Security Status**: ⚠️ [X] dependency/dependencies have active security issues / All dependencies are secure with no active vulnerabilities
-**Licenses Found**: BSD-3-Clause (Compatible), MIT (Compatible) / GPL-3.0 (⚠️ Incompatible), LGPL (⚠️ Requires review)
+**Licenses Found**: BSD-3-Clause (Apache 2.0 compatible), MIT (Apache 2.0 compatible) / GPL-3.0 (⚠️ Not Apache 2.0 compatible), LGPL (⚠️ Requires review)
 
 <details>
 <summary><b>See detailed analysis for more information</b></summary>
@@ -287,7 +287,7 @@ version: ">=v1.8.0"
 allowed_scopes: ["*"]
 ```
 
-- **License**: Apache-2.0 (Compatible)
+- **License**: Apache-2.0 (Apache 2.0 compatible)
 - **Version status**: Minimum version v1.8.0 is current (Latest stable: v1.8.1, released 12 days ago)
 - **Security**: No known CVEs
 - **Transitive Dependencies**: 8 dependencies analyzed, all secure
