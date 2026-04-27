@@ -276,3 +276,8 @@ dependencies:
       - version: ">=v1.39.1"
         allowed_scopes:
           - "*"
+  - module: golang.org/x/net 
+    versions: 
+      - version: "<v0.7.0" 
+        allowed_scopes:
+          - "*"
