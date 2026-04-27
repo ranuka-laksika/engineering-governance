@@ -1,0 +1,445 @@
+# ===================================================================
+# This workflow should be placed in the THUNDER REPOSITORY at:
+# .github/workflows/dependency-check.yml
+# ===================================================================
+
+name: Dependency Registry Validation
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'go.mod'
+      - 'go.sum'
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  validate-dependencies:
+    name: Validate Against Approved Registry
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Thunder Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Get base go.mod
+        id: get_base
+        run: |
+          git fetch origin ${{ github.event.pull_request.base.ref }}
+
+          # Check if go.mod exists in base branch
+          if git show origin/${{ github.event.pull_request.base.ref }}:go.mod > /tmp/go.mod.base 2>/dev/null; then
+            echo "Base go.mod found"
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "Base go.mod not found - treating as new file"
+            echo "exists=false" >> $GITHUB_OUTPUT
+            touch /tmp/go.mod.base
+          fi
+
+      - name: Get head go.mod
+        run: |
+          if [ -f go.mod ]; then
+            cp go.mod /tmp/go.mod.head
+          else
+            echo "ERROR: go.mod not found in PR branch"
+            exit 1
+          fi
+
+      - name: Extract dependency changes
+        id: extract_changes
+        run: |
+          # Create a script to parse go.mod and extract dependencies
+          cat > /tmp/parse_gomod.sh << 'SCRIPT'
+          #!/bin/bash
+
+          # Parse go.mod file and output dependencies in format: module@version
+          parse_gomod() {
+            local file="$1"
+            if [ ! -f "$file" ]; then
+              return
+            fi
+
+            # Extract direct dependencies (not indirect)
+            awk '
+              /^require \(/ { in_require=1; next }
+              /^\)/ { in_require=0; next }
+              in_require && !/\/\/ indirect/ {
+                # Remove leading/trailing whitespace and split
+                gsub(/^[[:space:]]+|[[:space:]]+$/, "");
+                if ($1 != "" && $2 != "") {
+                  print $1 "@" $2
+                }
+              }
+              /^require / && !/\/\/ indirect/ && !/\(/ {
+                # Single-line require
+                gsub(/^require[[:space:]]+/, "");
+                gsub(/^[[:space:]]+|[[:space:]]+$/, "");
+                if ($1 != "" && $2 != "") {
+                  print $1 "@" $2
+                }
+              }
+            ' "$file"
+          }
+
+          parse_gomod "$2"
+          SCRIPT
+
+          chmod +x /tmp/parse_gomod.sh
+
+          # Parse both versions
+          /tmp/parse_gomod.sh /tmp/go.mod.base > /tmp/deps.base.txt
+          /tmp/parse_gomod.sh /tmp/go.mod.head > /tmp/deps.head.txt
+
+          # Find added or updated dependencies
+          cat > /tmp/find_changes.py << 'PYTHON'
+          import sys
+
+          def parse_deps(file_path):
+              deps = {}
+              try:
+                  with open(file_path, 'r') as f:
+                      for line in f:
+                          line = line.strip()
+                          if '@' in line:
+                              parts = line.split('@')
+                              if len(parts) == 2:
+                                  deps[parts[0]] = parts[1]
+              except FileNotFoundError:
+                  pass
+              return deps
+
+          base_deps = parse_deps('/tmp/deps.base.txt')
+          head_deps = parse_deps('/tmp/deps.head.txt')
+
+          changes = []
+          for module, version in head_deps.items():
+              if module not in base_deps:
+                  changes.append(f"ADDED|{module}|{version}")
+              elif base_deps[module] != version:
+                  changes.append(f"UPDATED|{module}|{base_deps[module]}|{version}")
+
+          for change in changes:
+              print(change)
+          PYTHON
+
+          python3 /tmp/find_changes.py > /tmp/dependency_changes.txt
+
+          # Check if there are any changes
+          if [ -s /tmp/dependency_changes.txt ]; then
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "Dependency changes detected:"
+            cat /tmp/dependency_changes.txt
+          else
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "No dependency changes detected"
+          fi
+
+      - name: Checkout engineering-governance repository
+        if: steps.extract_changes.outputs.has_changes == 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: wso2/engineering-governance
+          path: engineering-governance
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Validate dependencies against registry
+        if: steps.extract_changes.outputs.has_changes == 'true'
+        id: validate
+        run: |
+          # Create validation script
+          cat > /tmp/validate_deps.py << 'VALIDATION'
+          import yaml
+          import re
+          import sys
+          from packaging import version as pkg_version
+
+          def parse_version_constraint(constraint):
+              """Parse version constraint like '>=v1.2.3' into operator and version"""
+              if constraint == "pseudo":
+                  return "pseudo", None
+
+              match = re.match(r'^(>=|>|<=|<|==?)?\s*v?(.+)$', constraint)
+              if match:
+                  op = match.group(1) or '=='
+                  ver = match.group(2)
+                  return op, ver
+              return None, None
+
+          def version_satisfies_constraint(test_version, constraint):
+              """Check if a version satisfies a constraint"""
+              if constraint == "pseudo":
+                  # Pseudo versions are allowed (for k8s.io/* packages)
+                  return True
+
+              op, constraint_ver = parse_version_constraint(constraint)
+              if op is None:
+                  return False
+
+              # Remove 'v' prefix if present
+              test_ver_clean = test_version.lstrip('v')
+              constraint_ver_clean = constraint_ver.lstrip('v') if constraint_ver else ''
+
+              try:
+                  test_v = pkg_version.parse(test_ver_clean)
+                  constraint_v = pkg_version.parse(constraint_ver_clean)
+
+                  if op == '>=' or op == '>':
+                      return test_v >= constraint_v
+                  elif op == '<=':
+                      return test_v <= constraint_v
+                  elif op == '<':
+                      return test_v < constraint_v
+                  elif op == '==' or op == '=':
+                      return test_v == constraint_v
+                  else:
+                      return False
+              except Exception as e:
+                  print(f"ERROR: Failed to compare versions: {test_version} vs {constraint}: {e}")
+                  return False
+
+          # Load approved dependencies registry
+          registry_path = 'engineering-governance/dependency-registry/go.yaml'
+          try:
+              with open(registry_path, 'r') as f:
+                  registry = yaml.safe_load(f)
+          except Exception as e:
+              print(f"ERROR: Failed to load registry: {e}")
+              sys.exit(1)
+
+          # Build approved dependencies lookup
+          approved = {}
+          for dep in registry.get('dependencies', []):
+              module = dep.get('module')
+              versions = dep.get('versions', [])
+              approved[module] = versions
+
+          # Load dependency changes
+          changes_path = '/tmp/dependency_changes.txt'
+          validation_results = []
+          has_failures = False
+
+          try:
+              with open(changes_path, 'r') as f:
+                  for line in f:
+                      line = line.strip()
+                      if not line:
+                          continue
+
+                      parts = line.split('|')
+                      change_type = parts[0]
+                      module = parts[1]
+
+                      if change_type == 'ADDED':
+                          new_version = parts[2]
+
+                          # Check if module is in approved list
+                          if module not in approved:
+                              validation_results.append({
+                                  'status': 'BLOCKED',
+                                  'module': module,
+                                  'version': new_version,
+                                  'change': 'ADDED',
+                                  'reason': f'Module {module} is not in the approved dependency registry'
+                              })
+                              has_failures = True
+                          else:
+                              # Check if version satisfies any approved constraint
+                              version_allowed = False
+                              matched_constraint = None
+
+                              for ver_entry in approved[module]:
+                                  constraint = ver_entry.get('version')
+                                  if version_satisfies_constraint(new_version, constraint):
+                                      version_allowed = True
+                                      matched_constraint = constraint
+                                      break
+
+                              if version_allowed:
+                                  validation_results.append({
+                                      'status': 'APPROVED',
+                                      'module': module,
+                                      'version': new_version,
+                                      'change': 'ADDED',
+                                      'reason': f'Version {new_version} satisfies constraint {matched_constraint}'
+                                  })
+                              else:
+                                  constraints = [v.get('version') for v in approved[module]]
+                                  validation_results.append({
+                                      'status': 'BLOCKED',
+                                      'module': module,
+                                      'version': new_version,
+                                      'change': 'ADDED',
+                                      'reason': f'Version {new_version} does not satisfy approved constraints: {", ".join(constraints)}'
+                                  })
+                                  has_failures = True
+
+                      elif change_type == 'UPDATED':
+                          old_version = parts[2]
+                          new_version = parts[3]
+
+                          # Check if module is in approved list
+                          if module not in approved:
+                              validation_results.append({
+                                  'status': 'BLOCKED',
+                                  'module': module,
+                                  'version': f'{old_version} → {new_version}',
+                                  'change': 'UPDATED',
+                                  'reason': f'Module {module} is not in the approved dependency registry'
+                              })
+                              has_failures = True
+                          else:
+                              # Check if new version satisfies any approved constraint
+                              version_allowed = False
+                              matched_constraint = None
+
+                              for ver_entry in approved[module]:
+                                  constraint = ver_entry.get('version')
+                                  if version_satisfies_constraint(new_version, constraint):
+                                      version_allowed = True
+                                      matched_constraint = constraint
+                                      break
+
+                              if version_allowed:
+                                  validation_results.append({
+                                      'status': 'APPROVED',
+                                      'module': module,
+                                      'version': f'{old_version} → {new_version}',
+                                      'change': 'UPDATED',
+                                      'reason': f'New version {new_version} satisfies constraint {matched_constraint}'
+                                  })
+                              else:
+                                  constraints = [v.get('version') for v in approved[module]]
+                                  validation_results.append({
+                                      'status': 'BLOCKED',
+                                      'module': module,
+                                      'version': f'{old_version} → {new_version}',
+                                      'change': 'UPDATED',
+                                      'reason': f'New version {new_version} does not satisfy approved constraints: {", ".join(constraints)}'
+                                  })
+                                  has_failures = True
+
+          except Exception as e:
+              print(f"ERROR: Failed to validate dependencies: {e}")
+              sys.exit(1)
+
+          # Output results
+          print("\n=== DEPENDENCY VALIDATION RESULTS ===\n")
+
+          for result in validation_results:
+              status_emoji = "✅" if result['status'] == 'APPROVED' else "❌"
+              print(f"{status_emoji} [{result['status']}] {result['module']}")
+              print(f"   Change: {result['change']}")
+              print(f"   Version: {result['version']}")
+              print(f"   Reason: {result['reason']}")
+              print()
+
+          # Save results for comment
+          import json
+          with open('/tmp/validation_results.json', 'w') as f:
+              json.dump({
+                  'results': validation_results,
+                  'has_failures': has_failures
+              }, f, indent=2)
+
+          # Exit with failure if any dependencies are blocked
+          if has_failures:
+              print("\n❌ VALIDATION FAILED: One or more dependencies are not approved")
+              sys.exit(1)
+          else:
+              print("\n✅ VALIDATION PASSED: All dependencies are approved")
+              sys.exit(0)
+          VALIDATION
+
+          # Install required Python package
+          pip install packaging pyyaml
+
+          # Run validation
+          python3 /tmp/validate_deps.py
+
+      - name: Create PR comment with results
+        if: always() && steps.extract_changes.outputs.has_changes == 'true'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+
+            // Read validation results
+            let validationData;
+            try {
+              validationData = JSON.parse(fs.readFileSync('/tmp/validation_results.json', 'utf8'));
+            } catch (error) {
+              console.log('Could not read validation results');
+              return;
+            }
+
+            const { results, has_failures } = validationData;
+
+            // Build comment
+            let comment = '## 🔍 Dependency Validation Report\n\n';
+            comment += `> **Repository**: ${{ github.repository }}\n`;
+            comment += `> **PR**: #${{ github.event.pull_request.number }}\n`;
+            comment += `> **Status**: ${has_failures ? '❌ **BLOCKED**' : '✅ **APPROVED**'}\n\n`;
+
+            comment += '---\n\n';
+            comment += '### Summary\n\n';
+
+            const approved = results.filter(r => r.status === 'APPROVED').length;
+            const blocked = results.filter(r => r.status === 'BLOCKED').length;
+
+            comment += `- ✅ Approved: **${approved}**\n`;
+            comment += `- ❌ Blocked: **${blocked}**\n`;
+            comment += `- 📊 Total Changes: **${results.length}**\n\n`;
+
+            comment += '---\n\n';
+            comment += '### Detailed Results\n\n';
+
+            for (const result of results) {
+              const emoji = result.status === 'APPROVED' ? '✅' : '❌';
+              comment += `#### ${emoji} \`${result.module}\`\n\n`;
+              comment += `- **Change Type**: ${result.change}\n`;
+              comment += `- **Version**: \`${result.version}\`\n`;
+              comment += `- **Status**: ${result.status}\n`;
+              comment += `- **Reason**: ${result.reason}\n\n`;
+            }
+
+            comment += '---\n\n';
+
+            if (has_failures) {
+              comment += '### ❌ Action Required\n\n';
+              comment += 'This PR cannot be merged because it contains dependencies that are not approved in the [engineering-governance registry](https://github.com/wso2/engineering-governance/blob/main/dependency-registry/go.yaml).\n\n';
+              comment += '**Next Steps**:\n';
+              comment += '1. Submit a PR to add the blocked dependencies to the engineering-governance registry\n';
+              comment += '2. Wait for the registry PR to be approved and merged\n';
+              comment += '3. Re-run this validation\n\n';
+            } else {
+              comment += '### ✅ All Clear!\n\n';
+              comment += 'All dependency changes are approved and comply with the engineering-governance registry.\n\n';
+            }
+
+            comment += '*Validation performed against [engineering-governance/dependency-registry/go.yaml](https://github.com/wso2/engineering-governance/blob/main/dependency-registry/go.yaml)*\n';
+
+            // Post comment
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: comment
+            });
+
+      - name: Fail if validation failed
+        if: steps.validate.outcome == 'failure'
+        run: |
+          echo "::error::Dependency validation failed - unapproved dependencies detected"
+          exit 1
