@@ -276,3 +276,15 @@ dependencies:
       - version: ">=v1.39.1"
         allowed_scopes:
           - "*"
+
+  - module: gopkg.in/yaml.v2
+    versions:
+      - version: "<v2.4.0"   
+        allowed_scopes:
+          - "*"    
+            
+  - module: github.com/spf13/viper
+    versions:
+    - version: ">=v1.15.0" 
+      allowed_scopes:
+        - "*"
