@@ -288,9 +288,3 @@ dependencies:
     - version: ">=v1.15.0" 
       allowed_scopes:
         - "*"
-        
-  - module: github.com/dgrijalva/jwt-go
-    versions:
-    - version: "<=v3.2.0"
-      allowed_scopes:
-        - "*"
