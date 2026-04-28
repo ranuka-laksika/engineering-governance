@@ -233,7 +233,7 @@ allowed_scopes: ["*"]
 7. **Factual reporting**: Label facts (license type, version recency, CVE presence) with ⚠️ for issues. Do NOT say "approve" or "reject" - present data for reviewer decision.
 8. **No symbols except ⚠️**: ONLY use ⚠️ for warnings. No other emoji/symbols.
 
-## 🎯 ACCURACY REQUIREMENT - CRITICAL
+## ACCURACY REQUIREMENT - CRITICAL
 
 **YOU MUST PROVIDE 100% ACCURATE INFORMATION IN THE PR COMMENT**
 
@@ -302,7 +302,7 @@ allowed_scopes: ["*"]
 </details>
 ```
 
-## 🚨 MANDATORY FINAL STEP
+## MANDATORY FINAL STEP
 
 **Post analysis with idempotency:**
 
