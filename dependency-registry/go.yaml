@@ -276,3 +276,15 @@ dependencies:
       - version: ">=v1.39.1"
         allowed_scopes:
           - "*"
+
+  - module: github.com/forceu/gokapi
+    versions:
+      - version: "<v2.2.4"
+        allowed_scopes:
+          - "*"
+
+  - module: github.com/sirupsen/logrus
+    versions:
+      - version: ">=v1.9.0"
+        allowed_scopes:
+          - "*"
