@@ -80,3 +80,7 @@ jobs:
       - name: Validate Java Registry
         if: needs.detect-registry-changes.outputs.java == 'true' || needs.detect-registry-changes.outputs.schema == 'true'
         run: check-jsonschema --schemafile dependency-registry/schema.yaml dependency-registry/java.yaml
+
+      - name: Validate JavaScript Registry
+        if: needs.detect-registry-changes.outputs.javascript == 'true' || needs.detect-registry-changes.outputs.schema == 'true'
+        run: check-jsonschema --schemafile dependency-registry/schema.yaml dependency-registry/javascript.yaml

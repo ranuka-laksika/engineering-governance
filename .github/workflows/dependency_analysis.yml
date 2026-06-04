@@ -1,23 +1,18 @@
 name: Claude Code • Dependency Analysis
 
-# SECURITY: Uses pull_request_target so secrets and write permissions are available for fork PRs.
-# The checkout below is pinned to base.sha (trusted base branch) — never change it to the PR branch.
-# Do not add steps that execute code from the PR branch; Claude reads PR data via GitHub API only.
-# Keep permissions scoped to the minimum required below.
 on:
-  pull_request_target:
+  pull_request:
     types: [opened, synchronize, reopened]
     paths:
       - 'dependency-registry/go.yaml'
 
-permissions: {}
+permissions:
+  pull-requests: write
+  contents: read
 
 jobs:
   analyze-dependencies:
     runs-on: ubuntu-latest
-    permissions:
-      pull-requests: write
-      contents: read
     steps:
       - name: Checkout repository base (for trusted system prompt)
         uses: actions/checkout@v4
