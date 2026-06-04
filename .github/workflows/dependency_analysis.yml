@@ -1,18 +1,23 @@
 name: Claude Code • Dependency Analysis
 
+# SECURITY: Uses pull_request_target so secrets and write permissions are available for fork PRs.
+# The checkout below is pinned to base.sha (trusted base branch) — never change it to the PR branch.
+# Do not add steps that execute code from the PR branch; Claude reads PR data via GitHub API only.
+# Keep permissions scoped to the minimum required below.
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, synchronize, reopened]
     paths:
       - 'dependency-registry/go.yaml'
 
-permissions:
-  pull-requests: write
-  contents: read
+permissions: {}
 
 jobs:
   analyze-dependencies:
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read
     steps:
       - name: Checkout repository base (for trusted system prompt)
         uses: actions/checkout@v4
@@ -49,5 +54,5 @@ jobs:
           track_progress: false
           use_sticky_comment: false
           claude_args: |
-            --allowedTools "WebFetch,WebSearch,mcp__github__get_pull_request,mcp__github__get_file_contents,mcp__github__create_issue_comment,,mcp__github__add_issue_comment,mcp__github__update_issue,Bash,Read"
+            --allowedTools "WebFetch,WebSearch,mcp__github__get_pull_request,mcp__github__get_file_contents,mcp__github__create_issue_comment,mcp__github__add_issue_comment,mcp__github__update_issue,Read"
             --model claude-haiku-4-5-20251001
