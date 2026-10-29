@@ -52,5 +52,80 @@ jobs:
           track_progress: false
           use_sticky_comment: false
           claude_args: |
-            --allowedTools "WebFetch,WebSearch,mcp__github__get_pull_request,mcp__github__get_file_contents,mcp__github__create_issue_comment,mcp__github__add_issue_comment,mcp__github__update_issue,Read"
+            --allowedTools "WebFetch,WebSearch,mcp__github__get_pull_request,mcp__github__get_file_contents,mcp__github__create_issue_comment,mcp__github__add_issue_comment,Read"
             --model claude-haiku-4-5-20251001
+
+      # Guarantees a comment always appears on the PR: if the agent did not post
+      # one itself this run, recover its report from the execution log and post it.
+      # Posts the agent's own output when available; otherwise a "see logs" notice.
+      - name: Ensure analysis comment is posted (fallback)
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          EXEC_FILE: ${{ steps.run_claude.outputs.execution_file }}
+        run: |
+          set -uo pipefail
+
+          # Normalize the execution log to a single JSON array (it may be a JSON
+          # array or newline-delimited JSON), so jq queries below work either way.
+          events=""
+          if [ -n "${EXEC_FILE:-}" ] && [ -f "${EXEC_FILE}" ]; then
+            events=$(jq -s 'if length==1 and (.[0]|type=="array") then .[0] else . end' "${EXEC_FILE}" 2>/dev/null || echo "")
+          fi
+
+          # Did the agent already post a comment successfully in THIS run?
+          # Match create/add_issue_comment tool calls to a non-error tool_result.
+          posted=false
+          if [ -n "$events" ]; then
+            posted=$(printf '%s' "$events" | jq -r '
+              ([ .[] | select(.type=="assistant") | .message.content[]?
+                 | select(.type=="tool_use")
+                 | select((.name // "") | test("create_issue_comment|add_issue_comment"))
+                 | .id ]) as $ids
+              | ([ .[] | select(.type=="user") | .message.content[]?
+                 | select(.type=="tool_result")
+                 | select((.is_error // false) | not)
+                 | .tool_use_id ]) as $okids
+              | (any($ids[]; ($okids | index(.)) != null)) // false
+            ' 2>/dev/null || echo "false")
+          fi
+
+          if [ "$posted" = "true" ]; then
+            echo "Agent already posted the analysis comment this run. Nothing to do."
+            exit 0
+          fi
+          echo "Agent did not post a comment this run. Posting via fallback."
+
+          # Recover the report the agent produced: prefer the body it built for its
+          # create/add_issue_comment call; else its final result text.
+          body=""
+          if [ -n "$events" ]; then
+            body=$(printf '%s' "$events" | jq -r '
+              [ .[] | select(.type=="assistant") | .message.content[]?
+                | select(.type=="tool_use")
+                | select((.name // "") | test("create_issue_comment|add_issue_comment"))
+                | .input.body ] | map(select(. != null)) | last // empty' 2>/dev/null || echo "")
+            if [ -z "$body" ]; then
+              body=$(printf '%s' "$events" | jq -r '
+                [ .[] | select(.type=="result") | .result ] | map(select(. != null)) | last // empty' 2>/dev/null || echo "")
+            fi
+          fi
+
+          # Last resort: a minimal notice so a comment always exists.
+          if [ -z "$body" ]; then
+            body=$(printf '<!-- dependency-analysis-report -->\n**Dependency analysis ran, but no report comment was produced.**\n\nThis is an automated fallback. See the workflow run logs for details: %s' "$RUN_URL")
+          fi
+
+          # GitHub caps issue comments at 65536 chars; truncate defensively.
+          if [ "$(printf '%s' "$body" | wc -c)" -gt 60000 ]; then
+            head_part="$(printf '%s' "$body" | head -c 60000)"
+            body="$(printf '%s\n\n---\n_(truncated by fallback; full analysis in the run logs: %s)_' "$head_part" "$RUN_URL")"
+          fi
+
+          printf '%s' "$body" > comment_body.md
+          jq -Rs '{body: .}' comment_body.md \
+            | gh api "repos/${REPO}/issues/${PR_NUMBER}/comments" --method POST --input -
+          echo "Fallback comment posted to PR #${PR_NUMBER}."
