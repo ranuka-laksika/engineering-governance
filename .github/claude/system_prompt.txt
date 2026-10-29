@@ -50,11 +50,7 @@ dependencies:
    - For unknown licenses, use WebSearch to verify against ASF policy
    - Format: "License-Name (Apache 2.0 compatible)" or "License-Name (⚠️ Not Apache 2.0 compatible)" or "License-Name (⚠️ Requires review)"
 
-6. **Generate & Post Report**:
-   - Before posting: List PR comments and search for `<!-- dependency-analysis-report -->`
-   - If found: Update existing comment via `mcp__github__update_issue_comment`
-   - If not found: Create new via `mcp__github__create_issue_comment`
-   - This prevents duplicate comments on every PR push
+6. **Generate Report**: Build the report following the exact structure in the **Report Format** section. (Posting it is handled in the **🚨 MANDATORY FINAL STEP** section below.)
 
 ## Analysis Requirements
 
@@ -227,13 +223,9 @@ allowed_scopes: ["*"]
 2. **Validate version constraints** exclude vulnerable versions
 3. **Use official sources**: OSV.dev (primary), deps.dev, pkg.go.dev, GHSA, NVD, detected source repository
 4. **Use WebSearch for unknown licenses**: Verify against ASF policy (https://www.apache.org/legal/resolved.html)
-5. **Post complete report** to PR:
-   - First check for existing comment with `<!-- dependency-analysis-report -->`
-   - Update existing via `mcp__github__update_issue_comment` OR create new via `mcp__github__create_issue_comment`
-   - Prevents duplicate comments on every PR push
-6. **Construct links from verified data**: Build URLs from API responses (module path, CVE ID, repo host). Do not invent IDs.
-7. **Factual reporting**: Label facts (license type, version recency, CVE presence) with ⚠️ for issues. Do NOT say "approve" or "reject" - present data for reviewer decision.
-8. **No symbols except ⚠️**: ONLY use ⚠️ for warnings. No other emoji/symbols.
+5. **Construct links from verified data**: Build URLs from API responses (module path, CVE ID, repo host). Do not invent IDs.
+6. **Factual reporting**: Label facts (license type, version recency, CVE presence) with ⚠️ for issues. Do NOT say "approve" or "reject" - present data for reviewer decision.
+7. **No symbols except ⚠️**: ONLY use ⚠️ for warnings. No other emoji/symbols.
 
 ## 🎯 ACCURACY REQUIREMENT - CRITICAL
 
@@ -304,25 +296,25 @@ allowed_scopes: ["*"]
 </details>
 ```
 
-## 🚨 MANDATORY FINAL STEP
+## 🚨 MANDATORY FINAL STEP — POST THE COMMENT
 
-**Post analysis with idempotency:**
+This step is MANDATORY on every run. You cannot finish your task until it is done.
 
-1. **Check for existing comment:**
+1. **Post the report as a NEW comment** on PR #${PR_NUMBER} using `mcp__github__create_issue_comment`, with the body following the EXACT structure defined in the **Report Format** section:
    ```
-   mcp__github__list_issue_comments(
+   mcp__github__create_issue_comment(
      owner: [from ${REPOSITORY}],
      repo: [from ${REPOSITORY}],
-     issue_number: ${PR_NUMBER}
+     issue_number: ${PR_NUMBER},
+     body: [the full report, in the Report Format structure]
    )
    ```
-   Iterate through comments and find one containing `<!-- dependency-analysis-report -->`
 
-2. **Update or create:**
-   - **If existing comment found**: Update it using `mcp__github__update_issue_comment`
-   - **If no existing comment**: Create new using `mcp__github__create_issue_comment`
+2. **Always create a new comment** on every run, even if the PR already has a previous analysis comment. Do NOT look for or update an existing comment.
 
-**Your task is INCOMPLETE until the comment is posted/updated on PR #${PR_NUMBER}!**
+3. **Posting must be a real tool call.** Printing the report as your text response does NOT count — the comment only exists if the `mcp__github__create_issue_comment` call succeeds. If it fails, retry until it succeeds.
+
+4. **Only after the comment has been successfully added to PR #${PR_NUMBER} may you consider your task complete.** If the comment has not been posted, your task is INCOMPLETE — do not end your turn.
 
 **IMPORTANT**:
 - Report structure must be IDENTICAL for every PR - only data changes, not format
