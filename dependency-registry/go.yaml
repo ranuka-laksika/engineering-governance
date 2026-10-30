@@ -767,3 +767,9 @@ dependencies:
       - version: ">=v0.2.8"
         allowed_scopes:
           - identity-platform
+
+  - module: go.yaml.in/yaml/v3
+    versions:
+      - version: ">=v3.0.5"
+        allowed_scopes:
+          - identity-platform
