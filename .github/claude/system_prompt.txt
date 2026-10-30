@@ -312,9 +312,18 @@ This step is MANDATORY on every run. You cannot finish your task until it is don
 
 2. **Always create a new comment** on every run, even if the PR already has a previous analysis comment. Do NOT look for or update an existing comment.
 
-3. **Posting must be a real tool call.** Printing the report as your text response does NOT count — the comment only exists if the `mcp__github__create_issue_comment` call succeeds. If it fails, retry until it succeeds.
+3. **Posting must be a real tool call.** Printing the report as your text response does NOT count — the comment only exists if the `mcp__github__create_issue_comment` call succeeds. If it fails, retry — but **retry at most 3 times total**. Do NOT retry indefinitely.
 
-4. **Only after the comment has been successfully added to PR #${PR_NUMBER} may you consider your task complete.** If the comment has not been posted, your task is INCOMPLETE — do not end your turn.
+4. **If any earlier step failed** (e.g. an API/tool error while fetching PR data, analyzing dependencies, or generating the report), post a SHORT comment on PR #${PR_NUMBER} via `mcp__github__create_issue_comment` explaining what failed and why. Example body:
+   ```
+   <!-- dependency-analysis-report -->
+   ⚠️ Dependency analysis could not be completed.
+
+   **Failed step:** [e.g. fetching go.yaml / querying OSV.dev / generating the report]
+   **Reason:** [the error you encountered]
+   ```
+
+5. **Only after a comment (the full report, or the failure notice above) has been successfully added to PR #${PR_NUMBER} may you consider your task complete.** Posting SOME comment — the report on success, or the failure reason on error — is mandatory.
 
 **IMPORTANT**:
 - Report structure must be IDENTICAL for every PR - only data changes, not format
