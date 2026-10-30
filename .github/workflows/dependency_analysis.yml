@@ -55,12 +55,10 @@ jobs:
             --allowedTools "WebFetch,WebSearch,mcp__github__get_pull_request,mcp__github__get_file_contents,Read"
             --model claude-haiku-4-5-20251001
 
-      - name: Post analysis report as PR comment
+      - name: Extract analysis report from agent output
+        id: extract_report
         if: always()
         env:
-          GH_TOKEN: ${{ github.token }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-          REPOSITORY: ${{ github.repository }}
           EXECUTION_FILE: ${{ steps.run_claude.outputs.execution_file }}
         run: |
           set -euo pipefail
@@ -83,6 +81,35 @@ jobs:
             REPORT=$'<!-- dependency-analysis-report -->\n⚠️ Dependency analysis could not be completed.\n\nThe analysis agent did not produce a report. Check the workflow run logs for details.'
           fi
 
+          # Write the report (and the raw execution log, if any) into an artifact dir.
+          ARTIFACT_DIR="$RUNNER_TEMP/dependency-analysis"
+          mkdir -p "$ARTIFACT_DIR"
+          printf '%s' "$REPORT" > "$ARTIFACT_DIR/dependency-report.md"
+          if [ -n "${EXECUTION_FILE:-}" ] && [ -f "$EXECUTION_FILE" ]; then
+            cp "$EXECUTION_FILE" "$ARTIFACT_DIR/execution-log.json"
+          fi
+
+          echo "artifact_dir=$ARTIFACT_DIR" >> "$GITHUB_OUTPUT"
+          echo "report_path=$ARTIFACT_DIR/dependency-report.md" >> "$GITHUB_OUTPUT"
+
+      - name: Save analysis report as artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-analysis-report-pr-${{ github.event.pull_request.number }}
+          path: ${{ steps.extract_report.outputs.artifact_dir }}
+          retention-days: 30
+          if-no-files-found: warn
+
+      - name: Post analysis report as PR comment
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPOSITORY: ${{ github.repository }}
+          REPORT_PATH: ${{ steps.extract_report.outputs.report_path }}
+        run: |
+          set -euo pipefail
+
           # Always post a NEW comment on the PR with the captured report.
-          printf '%s' "$REPORT" > "$RUNNER_TEMP/dependency-report.md"
-          gh pr comment "$PR_NUMBER" --repo "$REPOSITORY" --body-file "$RUNNER_TEMP/dependency-report.md"
+          gh pr comment "$PR_NUMBER" --repo "$REPOSITORY" --body-file "$REPORT_PATH"
