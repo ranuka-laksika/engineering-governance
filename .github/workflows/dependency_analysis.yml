@@ -54,6 +54,7 @@ jobs:
           claude_args: |
             --allowedTools "WebFetch,WebSearch,mcp__github__get_pull_request,mcp__github__get_file_contents,Read"
             --model claude-haiku-4-5-20251001
+            --max-turns 50
 
       - name: Extract analysis report from agent output
         id: extract_report
@@ -76,9 +77,18 @@ jobs:
             ' "$EXECUTION_FILE" || true)
           fi
 
+          # Guard: the agent sometimes emits a conversational/progress message
+          # ("I'm analyzing... ETA ~2 min") instead of the report. Only accept output
+          # that contains the report marker; otherwise discard it so we never post
+          # stray chatter to the PR.
+          if [ -n "$REPORT" ] && ! printf '%s' "$REPORT" | grep -q '<!-- dependency-analysis-report -->'; then
+            echo "::warning::Agent output did not contain the '<!-- dependency-analysis-report -->' marker; discarding and posting a failure notice instead."
+            REPORT=""
+          fi
+
           # Fall back to a failure notice if the agent produced no usable report.
           if [ -z "$REPORT" ]; then
-            REPORT=$'<!-- dependency-analysis-report -->\n⚠️ Dependency analysis could not be completed.\n\nThe analysis agent did not produce a report. Check the workflow run logs for details.'
+            REPORT=$'<!-- dependency-analysis-report -->\n⚠️ Dependency analysis could not be completed.\n\nThe analysis agent did not produce a valid report (it may have stopped early with a progress message). Check the workflow run logs for details.'
           fi
 
           # Write the report (and the raw execution log, if any) into an artifact dir.
