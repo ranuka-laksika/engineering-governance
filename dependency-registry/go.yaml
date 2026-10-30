@@ -762,9 +762,20 @@ dependencies:
         allowed_scopes:
           - api-platform
 
-  - module: github.com/zalando/go-keyring
+  - module: go.yaml.in/yaml/v3
     versions:
-      - version: ">=v0.2.8"
+      - version: ">=v3.0.5"
         allowed_scopes:
           - identity-platform
 
+  - module: github.com/spf13/viper
+    versions:
+      - version: ">=v1.21.0"
+        allowed_scopes:
+          - identity-platform
+
+  - module: github.com/nicksnyder/go-i18n/v2
+    versions:
+      - version: ">=v2.7.0"
+        allowed_scopes:
+          - identity-platform
