@@ -52,5 +52,37 @@ jobs:
           track_progress: false
           use_sticky_comment: false
           claude_args: |
-            --allowedTools "WebFetch,WebSearch,mcp__github__get_pull_request,mcp__github__get_file_contents,mcp__github__create_issue_comment,mcp__github__add_issue_comment,Read"
+            --allowedTools "WebFetch,WebSearch,mcp__github__get_pull_request,mcp__github__get_file_contents,Read"
             --model claude-haiku-4-5-20251001
+
+      - name: Post analysis report as PR comment
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPOSITORY: ${{ github.repository }}
+          EXECUTION_FILE: ${{ steps.run_claude.outputs.execution_file }}
+        run: |
+          set -euo pipefail
+
+          # Extract the agent's final text output from the execution log.
+          # The log may be a JSON array or newline-delimited JSON, so normalize first,
+          # then take the final `result` message (fallback: last assistant text block).
+          REPORT=""
+          if [ -n "${EXECUTION_FILE:-}" ] && [ -f "$EXECUTION_FILE" ]; then
+            REPORT=$(jq -rs '
+              (if (.[0] | type) == "array" then .[0] else . end) as $events
+              | ( [ $events[] | select(.type == "result")    | .result ] | last )
+                // ( [ $events[] | select(.type == "assistant") | .message.content[]? | select(.type == "text") | .text ] | last )
+                // empty
+            ' "$EXECUTION_FILE" || true)
+          fi
+
+          # Fall back to a failure notice if the agent produced no usable report.
+          if [ -z "$REPORT" ]; then
+            REPORT=$'<!-- dependency-analysis-report -->\n⚠️ Dependency analysis could not be completed.\n\nThe analysis agent did not produce a report. Check the workflow run logs for details.'
+          fi
+
+          # Always post a NEW comment on the PR with the captured report.
+          printf '%s' "$REPORT" > "$RUNNER_TEMP/dependency-report.md"
+          gh pr comment "$PR_NUMBER" --repo "$REPOSITORY" --body-file "$RUNNER_TEMP/dependency-report.md"
