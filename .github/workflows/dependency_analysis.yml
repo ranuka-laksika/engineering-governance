@@ -98,7 +98,7 @@ jobs:
         with:
           name: dependency-analysis-report-pr-${{ github.event.pull_request.number }}
           path: ${{ steps.extract_report.outputs.artifact_dir }}
-          retention-days: 30
+          retention-days: 1
           if-no-files-found: warn
 
       - name: Post analysis report as PR comment
